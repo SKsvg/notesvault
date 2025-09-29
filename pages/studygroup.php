@@ -1,3 +1,12 @@
+<?php
+session_start();
+
+if (!isset($_SESSION['user_id'])) {
+    // Redirect them to the login page
+    header("Location: login.html");
+    exit();
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -23,6 +32,61 @@
     <link rel="stylesheet" href="../styling/group-card.css" />
     <link rel="stylesheet" href="../styling/base.css" />
     <link rel="stylesheet" href="../styling/variables.css" />
+
+    <!-- Minimal styles for the modal (if your CSS already covers it you can remove this) -->
+    <style>
+      /* Basic modal styles - safe fallback */
+      .modal {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0,0,0,0.45);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 160ms ease-in-out;
+        z-index: 1200;
+      }
+      .modal.active { opacity: 1; pointer-events: auto; }
+      .modal .modal-content {
+        position: relative;
+        background: var(--card-bg, #fff);
+        border-radius: 10px;
+        width: 92%;
+        max-width: 480px;
+        padding: 20px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+      }
+      .modal .modal-header { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px; }
+      .modal .modal-footer { display:flex; justify-content:flex-end; gap:8px; margin-top:12px; }
+      .close-modal {
+        border: none;
+        background: transparent;
+        font-size: 1.15rem;
+        cursor: pointer;
+      }
+      .modal input[type="text"], .modal input[type="email"] {
+        width: 100%;
+        padding: 8px 10px;
+        border-radius: 6px;
+        border: 1px solid #cbd5e1;
+        font-size: 0.98rem;
+      }
+      .btn {
+        background: #90ee90;
+        color: #222;
+        border: none;
+        border-radius: 6px;
+        padding: 8px 14px;
+        font-size: 0.97rem;
+        cursor: pointer;
+      }
+      .btn.secondary {
+        background: #e5e7eb;
+        color: #111;
+      }
+    </style>
   </head>
 
   <body>
@@ -43,8 +107,7 @@
     <!-- Main Section -->
     <main class="studygroup-container">
       <div class="group-actions">
-        <button id="createGroupBtn"
-          style="background:#90ee90; color:#222; border:none; border-radius:5px; padding:7px 16px; font-size:0.97rem; cursor:pointer;">
+        <button id="createGroupBtn" class="btn">
           <i class="fas fa-users"></i> Create Group
         </button>
 
@@ -55,27 +118,9 @@
           placeholder="Enter group name to join"
           style="padding:7px 10px; border-radius:5px; border:1px solid #cbd5e1; font-size:0.97rem; margin-left:10px;"
         />
-        <button id="joinGroupBtn"
-          style="background:#90ee90; color:#222; border:none; border-radius:5px; padding:7px 16px; font-size:0.97rem; cursor:pointer;">
+        <button id="joinGroupBtn" class="btn" style="margin-left:8px;">
           Join Group
         </button>
-      </div>
-
-      <!-- Create Group Modal -->
-      <div id="createGroupModal" class="create-group-modal" style="display: none">
-        <h3 class="create-group-title">Create a New Group</h3>
-        <input
-          type="text"
-          id="groupNameInput"
-          class="create-group-input"
-          placeholder="Enter group name"
-        />
-        <div class="create-group-btns">
-          <button id="submitGroupBtn" class="create-group-btn create"
-            style="background:#90ee90; color:#222;">Create</button>
-          <button id="closeGroupModal" class="create-group-btn cancel">Cancel</button>
-        </div>
-        <div id="groupCreateMsg" class="create-group-msg"></div>
       </div>
 
       <!-- Groups List -->
@@ -84,75 +129,42 @@
       </div>
     </main>
 
+    <!-- Create Group Modal -->
+    <div id="createGroupModal" class="modal" aria-hidden="true">
+      <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="createGroupTitle">
+        <div class="modal-header">
+          <h3 id="createGroupTitle" style="margin:0; font-size:1.1rem;">Create a new group</h3>
+          <button id="closeGroupModal" class="close-modal" title="Close">&times;</button>
+        </div>
+
+        <div class="modal-body">
+          <label for="groupNameInput" style="display:block; margin-bottom:6px; font-size:0.95rem;">Group name</label>
+          <input id="groupNameInput" type="text" placeholder="e.g. Algorithms Study Group" />
+          <div id="groupCreateMsg" style="margin-top:8px; font-size:0.95rem;"></div>
+        </div>
+
+        <div class="modal-footer">
+          <button id="cancelGroupBtn" class="btn secondary">Cancel</button>
+          <button id="submitGroupBtn" class="btn">Create</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Footer -->
-      <?php include '../components/footer.php'; ?>
+    <?php include '../components/footer.php'; ?>
+
     <!-- JavaScript -->
-        <script src="../scripts/header.js" defer></script>
-        <script src="../scripts/script.js" defer></script>
+    <script src="../scripts/header.js" defer></script>
+    <script src="../scripts/script.js" defer></script>
+
     <script>
+      // Current logged-in user's email from PHP (escaped safely)
+      const currentUser = "<?php echo isset($_SESSION['user_email']) ? htmlspecialchars($_SESSION['user_email'], ENT_QUOTES) : 'demo@user.com'; ?>";
+
       // Local cache for groups so UI can be updated optimistically
       let cachedGroups = [];
 
-      // Utility: render groups from an array
-      function renderGroups(groups) {
-        cachedGroups = Array.isArray(groups) ? groups.slice() : [];
-        const userEmail = localStorage.getItem("userEmail") || "demo@user.com";
-        let html = "";
-        if (!cachedGroups || cachedGroups.length === 0) {
-          html = "<p>No groups created yet.</p>";
-        } else {
-          cachedGroups.forEach((group) => {
-            const leaveBtn =
-              group.members && group.members.includes(userEmail) && group.creator !== userEmail
-                ? `<button class="leaveBtn" data-group="${escapeHtml(group.name)}">Leave Group</button>`
-                : "";
-
-            const goInsideBtn =
-              group.members && group.members.includes(userEmail)
-                ? `<button class="goInsideBtn" data-group="${escapeHtml(group.name)}" 
-                    style="background:#7ed957; color:#222; border:none; border-radius:5px; 
-                    padding:7px 16px; font-size:0.97rem; cursor:pointer; margin-right:8px;">
-                    Go Inside</button>`
-                : "";
-
-            const deleteBtn =
-              group.creator === userEmail
-                ? `<button class="deleteBtn" data-group="${escapeHtml(group.name)}">Delete Group</button>`
-                : "";
-
-            const addMember =
-              group.creator === userEmail
-                ? `<div style="margin-top:10px;">
-                    <input type="email" class="addMemberInput" placeholder="Add member by email"
-                      style="width:70%; padding:7px 10px; margin-right:8px; border-radius:5px; border:1px solid #cbd5e1; font-size:0.97rem;" />
-                    <button class="addMemberBtn" data-group="${escapeHtml(group.name)}"
-                      style="background:#90ee90; color:#222; border:none; border-radius:5px; padding:7px 16px; font-size:0.97rem; cursor:pointer;">
-                      Add Member
-                    </button>
-                    <div class="addMemberMsg" style="color:red; margin-top:5px; font-size:0.95rem;"></div>
-                  </div>`
-                : "";
-
-            html += `
-              <div class="group-card${group.justCreated ? " new-group" : ""}">
-                <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
-                  <h4 style="margin:0; color:${group.justCreated ? "#7c3aed" : "#4f46e5"}; font-size:1.15rem;">${escapeHtml(group.name)}</h4>
-                  ${group.justCreated ? '<span style="background:#7c3aed; color:#fff; border-radius:4px; padding:2px 8px; font-size:0.92rem;">New</span>' : ""}
-                </div>
-                <p style="margin:0 0 6px 0; color:#4f46e5; font-size:0.97rem;">Created by: ${escapeHtml(group.creator)}</p>
-                <p style="margin:0 0 10px 0; color:#555; font-size:0.96rem;">Members: ${Array.isArray(group.members) ? group.members.length : 0}</p>
-                ${addMember}
-                ${leaveBtn}
-                ${goInsideBtn}
-                ${deleteBtn}
-              </div>
-            `;
-          });
-        }
-        document.getElementById("groupsList").innerHTML = html;
-      }
-
-      // Safe HTML escape for injected values
+      // Utility: safe HTML escape for rendering text nodes
       function escapeHtml(str) {
         if (typeof str !== "string") return "";
         return str
@@ -163,150 +175,212 @@
           .replace(/'/g, "&#039;");
       }
 
-      // Fetch groups.json from server and render (with fallback to cachedGroups)
+      // Render groups into the page (cachedGroups kept as plain objects)
+      function renderGroups(groups) {
+        cachedGroups = Array.isArray(groups) ? groups.slice() : [];
+        const userEmail = currentUser;
+        let html = "";
+        if (!cachedGroups || cachedGroups.length === 0) {
+          html = "<p>No groups created yet.</p>";
+        } else {
+          cachedGroups.forEach((group) => {
+            const isMember = Array.isArray(group.members) && group.members.includes(userEmail);
+            const isCreator = group.creator === userEmail;
+
+            const leaveBtn =
+              isMember && !isCreator
+                ? `<button class="leaveBtn btn" data-group="${encodeURIComponent(group.name)}" style="margin-top:10px;">Leave Group</button>`
+                : "";
+
+            const goInsideBtn =
+              isMember
+                ? `<button class="goInsideBtn btn" data-group="${encodeURIComponent(group.name)}" 
+                    style="margin-top:10px; margin-right:8px;">
+                    Go Inside</button>`
+                : "";
+
+            const deleteBtn =
+              isCreator
+                ? `<button class="deleteBtn btn" data-group="${encodeURIComponent(group.name)}" style="margin-top:10px;">Delete Group</button>`
+                : "";
+
+            const addMember =
+              isCreator
+                ? `<div style="margin-top:10px;">
+                    <input type="email" class="addMemberInput" placeholder="Add member by email"
+                      style="width:70%; padding:7px 10px; margin-right:8px; border-radius:5px; border:1px solid #cbd5e1; font-size:0.97rem;" />
+                    <button class="addMemberBtn btn" data-group="${encodeURIComponent(group.name)}"
+                      style="padding:7px 14px; font-size:0.95rem;">
+                      Add Member
+                    </button>
+                    <div class="addMemberMsg" style="color:red; margin-top:5px; font-size:0.95rem;"></div>
+                  </div>`
+                : "";
+
+            html += `
+              <div class="group-card${group.justCreated ? " new-group" : ""}" style="margin-bottom:14px;">
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+                  <h4 style="margin:0; color:${group.justCreated ? "#7c3aed" : "#4f46e5"}; font-size:1.15rem;">${escapeHtml(group.name)}</h4>
+                  ${group.justCreated ? '<span style="background:#7c3aed; color:#fff; border-radius:4px; padding:2px 8px; font-size:0.92rem;">New</span>' : ""}
+                </div>
+                <p style="margin:0 0 6px 0; color:#4f46e5; font-size:0.97rem;">Created by: ${escapeHtml(group.creator)}</p>
+                <p style="margin:0 0 10px 0; color:#555; font-size:0.96rem;">Members: ${Array.isArray(group.members) ? group.members.length : 0}</p>
+                ${addMember}
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                  ${goInsideBtn}
+                  ${leaveBtn}
+                  ${deleteBtn}
+                </div>
+              </div>
+            `;
+          });
+        }
+        const container = document.getElementById("groupsList");
+        if (container) container.innerHTML = html;
+      }
+
+      // Fetch groups from server and render (with fallback to cachedGroups)
       function loadGroups() {
-        fetch("../data/groups.json", { cache: "no-store" })
+        fetch("groups.php?api=get_groups", { cache: "no-store" })
           .then((res) => {
-            if (!res.ok) throw new Error("Failed to load groups.json");
+            if (!res.ok) throw new Error("Failed to load groups");
             return res.json();
           })
           .then((groups) => {
-            // Ensure groups is an array
             if (!Array.isArray(groups)) groups = [];
             renderGroups(groups);
           })
           .catch((err) => {
-            console.warn("Could not fetch groups.json — using cachedGroups if available", err);
-            // if cachedGroups already set, render them; otherwise show empty
+            console.warn("Could not fetch groups — using cachedGroups if available", err);
             renderGroups(cachedGroups || []);
           });
       }
 
-      // Find group by name (case-insensitive)
+      // Find group by name (case-insensitive) in cachedGroups
       function findGroupIndexByName(name) {
+        if (!name) return -1;
         return cachedGroups.findIndex(g => g.name && g.name.toLowerCase() === name.toLowerCase());
       }
 
-      // Page load
-      window.onload = loadGroups;
+      // Helper to decode data-group attribute
+      function readGroupNameFromAttr(el) {
+        const raw = el.getAttribute("data-group") || "";
+        try { return decodeURIComponent(raw); } catch (e) { return raw; }
+      }
 
-      // Open/close create modal
-      document.getElementById("createGroupBtn").addEventListener("click", () => {
-        document.getElementById("createGroupModal").style.display = "block";
-      });
-      document.getElementById("closeGroupModal").addEventListener("click", () => {
-        document.getElementById("createGroupModal").style.display = "none";
-        document.getElementById("groupCreateMsg").innerText = "";
-      });
-
-      // Submit group creation — optimistic UI update if server doesn't update file immediately
-      document.getElementById("submitGroupBtn").addEventListener("click", () => {
-        const groupName = document.getElementById("groupNameInput").value.trim();
+      // Wire up modal and controls (guarded in case elements missing)
+      (function modalSetup() {
+        const createBtn = document.getElementById("createGroupBtn");
+        const modal = document.getElementById("createGroupModal");
+        const closeBtn = document.getElementById("closeGroupModal");
+        const cancelBtn = document.getElementById("cancelGroupBtn");
+        const submitBtn = document.getElementById("submitGroupBtn");
+        const nameInput = document.getElementById("groupNameInput");
         const msgDiv = document.getElementById("groupCreateMsg");
-        if (!groupName) {
-          msgDiv.style.color = "red";
-          msgDiv.innerText = "Please enter a group name.";
-          return;
+
+        function openModal() {
+          if (modal) modal.classList.add("active");
+          if (nameInput) { nameInput.value = ""; nameInput.focus(); }
+          if (msgDiv) { msgDiv.innerText = ""; msgDiv.style.color = ""; }
         }
-        // prevent duplicate locally
-        if (findGroupIndexByName(groupName) !== -1) {
-          msgDiv.style.color = "red";
-          msgDiv.innerText = "A group with that name already exists.";
-          return;
+        function closeModal() {
+          if (modal) modal.classList.remove("active");
+          if (msgDiv) { msgDiv.innerText = ""; }
         }
 
-        const creator = localStorage.getItem("userEmail") || "demo@user.com";
+        if (createBtn) createBtn.addEventListener("click", openModal);
+        if (closeBtn) closeBtn.addEventListener("click", closeModal);
+        if (cancelBtn) cancelBtn.addEventListener("click", closeModal);
 
-        fetch("groups.php", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ groupName: groupName, creator: creator }),
-        })
-        .then(res => res.json().catch(() => ({})))
-        .then((data) => {
-          // If server responded successfully, try to reload groups.json from server.
-          // Otherwise, optimistically add the group locally so user sees it immediately.
-          if (data && data.success) {
-            msgDiv.style.color = "green";
-            msgDiv.innerText = data.message || "Group created.";
-            // attempt to fetch updated groups.json — if not updated, fallback below
-            fetch("../data/groups.json", { cache: "no-store" })
-              .then(r => r.ok ? r.json() : Promise.reject("no-json"))
-              .then(groups => {
-                // If server returned the new group, render it.
-                if (Array.isArray(groups) && findGroupIndexByName(groupName) === -1) {
-                  // mark the new group as justCreated for visual
-                  const idx = groups.findIndex(g => g.name && g.name.toLowerCase() === groupName.toLowerCase());
-                  if (idx !== -1) {
-                    groups[idx].justCreated = true;
-                  } else {
-                    // server did not include the new group yet — append
-                    groups.push({ name: groupName, creator: creator, members: [creator], justCreated: true });
-                  }
-                } else if (!Array.isArray(groups)) {
-                  groups = [{ name: groupName, creator: creator, members: [creator], justCreated: true }];
-                }
-                renderGroups(groups);
-              })
-              .catch(() => {
-                // server didn't update groups.json yet — optimistic local append
-                const newGroup = { name: groupName, creator: creator, members: [creator], justCreated: true };
-                cachedGroups.push(newGroup);
-                renderGroups(cachedGroups);
-              })
-              .finally(() => {
-                // close modal and clear
-                setTimeout(() => {
-                  document.getElementById("createGroupModal").style.display = "none";
-                  msgDiv.innerText = "";
-                  document.getElementById("groupNameInput").value = "";
-                  // clear justCreated mark after a short delay (optional)
-                  setTimeout(() => {
-                    for (let g of cachedGroups) { delete g.justCreated; }
-                    renderGroups(cachedGroups);
-                  }, 2500);
-                }, 800);
-              });
-          } else {
-            // server didn't return success object — still optimistically create locally
-            msgDiv.style.color = "green";
-            msgDiv.innerText = data.message || "Group created (local).";
-            const newGroup = { name: groupName, creator: creator, members: [creator], justCreated: true };
-            cachedGroups.push(newGroup);
-            renderGroups(cachedGroups);
-            setTimeout(() => {
-              document.getElementById("createGroupModal").style.display = "none";
-              msgDiv.innerText = "";
-              document.getElementById("groupNameInput").value = "";
-              setTimeout(() => {
-                for (let g of cachedGroups) { delete g.justCreated; }
-                renderGroups(cachedGroups);
-              }, 2500);
-            }, 800);
-          }
-        })
-        .catch((err) => {
-          msgDiv.style.color = "red";
-          msgDiv.innerText = "Could not create group (network error).";
-          console.error("Create group failed:", err);
+        // allow clicking outside modal content to close
+        if (modal) {
+          modal.addEventListener("click", (ev) => {
+            if (ev.target === modal) closeModal();
+          });
+        }
+
+        // pressing Escape closes modal
+        document.addEventListener("keydown", (ev) => {
+          if (ev.key === "Escape" && modal && modal.classList.contains("active")) closeModal();
         });
-      });
+
+        // Submit group creation
+        if (submitBtn) {
+          submitBtn.addEventListener("click", () => {
+            if (!nameInput) return;
+            const groupName = nameInput.value.trim();
+            if (!groupName) {
+              msgDiv.style.color = "red";
+              msgDiv.innerText = "Please enter a group name.";
+              return;
+            }
+            if (findGroupIndexByName(groupName) !== -1) {
+              msgDiv.style.color = "red";
+              msgDiv.innerText = "A group with that name already exists.";
+              return;
+            }
+
+            // optimistic message
+            msgDiv.style.color = "orange";
+            msgDiv.innerText = "Creating...";
+
+            fetch("groups.php", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ groupName: groupName, creator: currentUser }),
+            })
+            .then(res => res.json().catch(() => ({})))
+            .then((data) => {
+              if (data && data.success) {
+                msgDiv.style.color = "green";
+                msgDiv.innerText = data.message || "Group created.";
+                // refresh groups
+                loadGroups();
+                setTimeout(() => {
+                  closeModal();
+                }, 600);
+              } else {
+                msgDiv.style.color = "red";
+                msgDiv.innerText = (data && data.message) || "Could not create group.";
+              }
+            })
+            .catch((err) => {
+              console.error("Create group failed:", err);
+              msgDiv.style.color = "red";
+              msgDiv.innerText = "Could not create group (network error).";
+            });
+          });
+        }
+
+        // Pressing Enter in the input will submit
+        if (nameInput) {
+          nameInput.addEventListener("keydown", (ev) => {
+            if (ev.key === "Enter") {
+              ev.preventDefault();
+              if (submitBtn) submitBtn.click();
+            }
+          });
+        }
+      })();
 
       // Delegated handlers: add member, leave, delete, go inside
       document.getElementById("groupsList").addEventListener("click", (e) => {
-        const userEmail = localStorage.getItem("userEmail") || "demo@user.com";
+        const target = e.target;
+        const userEmail = currentUser;
 
         // Go inside
-        if (e.target.classList.contains("goInsideBtn")) {
-          const groupName = e.target.getAttribute("data-group");
+        if (target.classList.contains("goInsideBtn")) {
+          const groupName = readGroupNameFromAttr(target);
+          if (!groupName) return;
           localStorage.setItem("selectedGroup", groupName);
           window.location.href = "groupdetails.php?group=" + encodeURIComponent(groupName);
           return;
         }
 
         // Leave group
-        if (e.target.classList.contains("leaveBtn")) {
-          const groupName = e.target.getAttribute("data-group");
+        if (target.classList.contains("leaveBtn")) {
+          const groupName = readGroupNameFromAttr(target);
+          if (!groupName) return;
           if (!confirm("Are you sure you want to leave this group?")) return;
           fetch("leaveGroup.php", {
             method: "POST",
@@ -315,15 +389,8 @@
           })
           .then(res => res.json().catch(()=>({})))
           .then(data => {
-            // if server says success, remove from local cache; otherwise still remove locally
-            const idx = findGroupIndexByName(groupName);
-            if (idx !== -1) {
-              const members = cachedGroups[idx].members || [];
-              const newMembers = members.filter(m => m.toLowerCase() !== userEmail.toLowerCase());
-              cachedGroups[idx].members = newMembers;
-              // If user removed themselves completely and not creator, still keep group card visible for others.
-              renderGroups(cachedGroups);
-            }
+            // Reload from server to reflect changes
+            loadGroups();
             alert((data && data.message) || "Left group.");
           })
           .catch(err => {
@@ -334,13 +401,12 @@
         }
 
         // Add member (creator only)
-        if (e.target.classList.contains("addMemberBtn")) {
-          const groupName = e.target.getAttribute("data-group");
-          // the structure: <input> <button.addMemberBtn data-group> <div.addMemberMsg>
-          // but there may be whitespace nodes; use closest parent to find input & msg to be robust
-          const container = e.target.parentElement;
-          const emailInput = container.querySelector(".addMemberInput");
-          const msgDiv = container.querySelector(".addMemberMsg");
+        if (target.classList.contains("addMemberBtn")) {
+          const groupName = readGroupNameFromAttr(target);
+          if (!groupName) return;
+          const container = target.parentElement;
+          const emailInput = container ? container.querySelector(".addMemberInput") : null;
+          const msgDiv = container ? container.querySelector(".addMemberMsg") : null;
           const email = emailInput ? emailInput.value.trim() : "";
           if (!email) {
             if (msgDiv) { msgDiv.style.color = "red"; msgDiv.innerText = "Enter an email."; }
@@ -357,12 +423,11 @@
             if (data && data.success) {
               if (msgDiv) { msgDiv.style.color = "green"; msgDiv.innerText = data.message || "Member added."; }
             } else {
-              if (msgDiv) { msgDiv.style.color = "green"; msgDiv.innerText = (data && data.message) || "Member added (local)."; }
+              if (msgDiv) { msgDiv.style.color = "red"; msgDiv.innerText = (data && data.message) || "Error adding member."; }
             }
             // Optimistically update local cache
             const idx = findGroupIndexByName(groupName);
             if (idx === -1) {
-              // group not present locally — fetch fresh list
               loadGroups();
             } else {
               const members = cachedGroups[idx].members || [];
@@ -382,8 +447,9 @@
         }
 
         // Delete group (creator only)
-        if (e.target.classList.contains("deleteBtn")) {
-          const groupName = e.target.getAttribute("data-group");
+        if (target.classList.contains("deleteBtn")) {
+          const groupName = readGroupNameFromAttr(target);
+          if (!groupName) return;
           if (!confirm("Delete this group? This cannot be undone.")) return;
           fetch("deleteGroup.php", {
             method: "POST",
@@ -398,14 +464,10 @@
               cachedGroups.splice(idx, 1);
               renderGroups(cachedGroups);
             } else {
-              // try reload if not found
               loadGroups();
             }
-            if (data && data.success) {
-              // server confirmed deletion
-              // (no extra UI action needed; group already removed)
-            } else {
-              // server didn't confirm — still removed locally
+            if (!(data && data.success)) {
+              // server didn't confirm — still removed locally (we attempted optimistic UX)
             }
           })
           .catch(err => {
@@ -416,109 +478,51 @@
         }
       });
 
-      // Join group button — will update server and also update local UI optimistically
-      document.getElementById("joinGroupBtn").addEventListener("click", () => {
-        const groupCode = document.getElementById("joinGroupInput").value.trim();
-        const userEmail = localStorage.getItem("userEmail") || "demo@user.com";
-        if (!groupCode) {
-          alert("Please enter a group name to join.");
-          return;
-        }
-
-        // Load current groups (use cached if available)
-        const tryGroups = cachedGroups.length ? cachedGroups : [];
-
-        // attempt to find group locally (case-insensitive)
-        let foundLocal = false;
-        for (let g of tryGroups) {
-          if (g.name && g.name.toLowerCase() === groupCode.toLowerCase()) {
-            foundLocal = true;
-            if (!Array.isArray(g.members)) g.members = [];
-            if (!g.members.includes(userEmail)) {
-              g.members.push(userEmail);
-            }
-            break;
-          }
-        }
-
-        // Prepare to send updated groups to server. If we have fresh JSON, use it; otherwise fetch first.
-        const sendUpdatedGroups = (groupsArr) => {
-          // ensure groupsArr is array
-          if (!Array.isArray(groupsArr)) groupsArr = tryGroups.length ? tryGroups : [];
-          // if local didn't have the group, try to mark foundLocal by scanning groupsArr
-          let found = groupsArr.some(g => g.name && g.name.toLowerCase() === groupCode.toLowerCase());
-          // if not found and we earlier updated cachedGroups, set found true
-          if (!found && findGroupIndexByName(groupCode) !== -1) found = true;
-
-          if (!found) {
-            alert("Group not found. Please check the name and try again.");
+      // Join group button
+      (function setupJoin() {
+        const joinBtn = document.getElementById("joinGroupBtn");
+        const joinInput = document.getElementById("joinGroupInput");
+        if (!joinBtn || !joinInput) return;
+        joinBtn.addEventListener("click", () => {
+          const groupCode = joinInput.value.trim();
+          const userEmail = currentUser;
+          if (!groupCode) {
+            alert("Please enter a group name to join.");
             return;
           }
 
-          // Update groupsArr members (ensure userEmail present)
-          groupsArr = groupsArr.map(g => {
-            if (g.name && g.name.toLowerCase() === groupCode.toLowerCase()) {
-              g.members = Array.isArray(g.members) ? g.members : [];
-              if (!g.members.includes(userEmail)) g.members.push(userEmail);
-            }
-            return g;
-          });
-
-          fetch("groups.php", {
+          fetch("joinGroup.php", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ groups: groupsArr }),
+            body: JSON.stringify({ groupName: groupCode, email: userEmail }),
           })
-          .then(res => res.json().catch(()=>({})))
+          .then(res => res.json().catch(() => ({})))
           .then(data => {
-            // Optimistically update local cache and UI
-            const idx = findGroupIndexByName(groupCode);
-            if (idx === -1) {
-              // try to update cachedGroups by merging
-              const serverGroup = (groupsArr.find(g => g.name && g.name.toLowerCase() === groupCode.toLowerCase()) || null);
-              if (serverGroup) {
-                cachedGroups.push(serverGroup);
-              }
+            if (data && data.success) {
+              loadGroups();
+              joinInput.value = "";
+              alert(data.message || "Joined group.");
             } else {
-              if (!cachedGroups[idx].members) cachedGroups[idx].members = [];
-              if (!cachedGroups[idx].members.includes(userEmail)) cachedGroups[idx].members.push(userEmail);
+              alert((data && data.message) || "Could not join group.");
             }
-            renderGroups(cachedGroups);
-            document.getElementById("joinGroupInput").value = "";
-            alert((data && data.message) || "Joined group.");
           })
           .catch(err => {
             console.error("Join failed:", err);
-            // fallback optimistic local update (try again later)
-            const idx = findGroupIndexByName(groupCode);
-            if (idx !== -1) {
-              if (!cachedGroups[idx].members) cachedGroups[idx].members = [];
-              if (!cachedGroups[idx].members.includes(userEmail)) cachedGroups[idx].members.push(userEmail);
-              renderGroups(cachedGroups);
-              document.getElementById("joinGroupInput").value = "";
-              alert("Joined group (local).");
-            } else {
-              alert("Could not join group (network error).");
-            }
+            alert("Could not join group (network error).");
           });
-        };
+        });
 
-        // If cachedGroups empty, try fetching groups.json first
-        if (!cachedGroups.length) {
-          fetch("../data/groups.json", { cache: "no-store" })
-            .then(res => res.ok ? res.json() : Promise.reject("no-json"))
-            .then(groups => {
-              renderGroups(Array.isArray(groups) ? groups : []);
-              sendUpdatedGroups(groups);
-            })
-            .catch(() => {
-              // fallback: use cachedGroups even if empty
-              sendUpdatedGroups(cachedGroups);
-            });
-        } else {
-          sendUpdatedGroups(cachedGroups);
-        }
-      });
+        // allow Enter key to join
+        joinInput.addEventListener("keydown", (ev) => {
+          if (ev.key === "Enter") {
+            ev.preventDefault();
+            joinBtn.click();
+          }
+        });
+      })();
+
+      // Page load
+      window.addEventListener("load", loadGroups);
     </script>
   </body>
 </html>

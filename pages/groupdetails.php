@@ -8,11 +8,13 @@ $chatFile   = "$baseDir/{$groupName}_chat.json";
 $notesFile  = "$baseDir/{$groupName}_notes.json";
 $gamesFile  = "$baseDir/{$groupName}_games.json";
 $meetingFile= "$baseDir/{$groupName}_meeting.json";
+$groupsFile = "../data/groups.json";
 
 // initialize empty JSON if not exists
 foreach ([$chatFile, $notesFile, $gamesFile, $meetingFile] as $f) {
     if (!file_exists($f)) file_put_contents($f, json_encode([]));
 }
+if (!file_exists($groupsFile)) file_put_contents($groupsFile, json_encode([]));
 
 // API Handling
 if (isset($_GET['api'])) {
@@ -31,9 +33,23 @@ if (isset($_GET['api'])) {
         echo file_get_contents($chatFile);
         exit;
     }
-    if ($api === 'note_add' && !empty($_POST['title']) && isset($_POST['content'])) {
+    if ($api === 'note_add' && !empty($_POST['title'])) {
         $notes = json_decode(file_get_contents($notesFile), true);
-        $notes[] = ["title"=>$_POST['title'], "content"=>$_POST['content'], "user"=>$user, "time"=>date("Y-m-d H:i:s")];
+        $uploadDir = __DIR__ . "/uploads/{$groupName}";
+        if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
+        $note = ["title"=>$_POST['title'], "user"=>$user, "time"=>date("Y-m-d H:i:s")];
+        if (isset($_FILES['file']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
+            $fileName = basename($_FILES['file']['name']);
+            $filePath = $uploadDir . '/' . $fileName;
+            if (move_uploaded_file($_FILES['file']['tmp_name'], $filePath)) {
+                $note['type'] = 'file';
+                $note['file_path'] = "uploads/{$groupName}/{$fileName}";
+                $note['file_name'] = $fileName;
+            }
+        } else {
+            $note['content'] = $_POST['content'] ?? '';
+        }
+        $notes[] = $note;
         file_put_contents($notesFile, json_encode($notes));
         echo json_encode(["status"=>"ok"]);
         exit;
@@ -54,10 +70,10 @@ if (isset($_GET['api'])) {
         echo json_encode(["status"=>"ok"]);
         exit;
     }
-    if ($api === 'meeting_schedule' && !empty($_POST['datetime'])) {
+    if ($api === 'meeting_schedule' && !empty($_POST['title']) && !empty($_POST['datetime'])) {
         $meeting = json_decode(file_get_contents($meetingFile), true);
         if (!isset($meeting['scheduled'])) $meeting['scheduled'] = [];
-        $meeting['scheduled'][] = ["datetime"=>$_POST['datetime'], "user"=>$user, "time"=>date("Y-m-d H:i:s")];
+        $meeting['scheduled'][] = ["title"=>$_POST['title'], "datetime"=>$_POST['datetime'], "user"=>$user, "time"=>date("Y-m-d H:i:s")];
         file_put_contents($meetingFile, json_encode($meeting));
         echo json_encode(["status"=>"ok"]);
         exit;
@@ -69,13 +85,91 @@ if (isset($_GET['api'])) {
     if ($api === 'quiz_add' && !empty($_POST['question']) && !empty($_POST['answer'])) {
         $games = json_decode(file_get_contents($gamesFile), true);
         if (!isset($games['quizzes'])) $games['quizzes'] = [];
-        $games['quizzes'][] = ["question"=>$_POST['question'], "answer"=>$_POST['answer'], "user"=>$user];
+        $review = $_POST['review'] ?? '';
+        $games['quizzes'][] = ["question"=>$_POST['question'], "answer"=>$_POST['answer'], "review"=>$review, "user"=>$user];
         file_put_contents($gamesFile, json_encode($games));
         echo json_encode(["status"=>"ok"]);
         exit;
     }
+    if ($api === 'quiz_delete' && isset($_POST['index'])) {
+        $index = (int)$_POST['index'];
+        $games = json_decode(file_get_contents($gamesFile), true);
+        if (isset($games['quizzes']) && isset($games['quizzes'][$index])) {
+            array_splice($games['quizzes'], $index, 1);
+            file_put_contents($gamesFile, json_encode($games));
+            echo json_encode(["status"=>"ok"]);
+        } else {
+            echo json_encode(["status"=>"error"]);
+        }
+        exit;
+    }
     if ($api === 'quiz_get') {
         echo file_get_contents($gamesFile);
+        exit;
+    }
+    if ($api === 'members_get') {
+        $groups = json_decode(file_get_contents($groupsFile), true);
+        $group = $groups[$groupName] ?? [];
+        $members = $group['members'] ?? [];
+        echo json_encode($members);
+        exit;
+    }
+    if ($api === 'members_add' && !empty($_POST['email'])) {
+        $groups = json_decode(file_get_contents($groupsFile), true);
+        if (!isset($groups[$groupName])) {
+            $groups[$groupName] = ['members' => []];
+        }
+        $email = $_POST['email'];
+        if (!in_array($email, $groups[$groupName]['members'])) {
+            $groups[$groupName]['members'][] = $email;
+            // Send email notification
+            $subject = "Added to Group";
+            $message = "You are added to a group $groupName. Now you are a member of this group.";
+            $headers = "From: noreply@yourdomain.com\r\n";
+            mail($email, $subject, $message, $headers);
+        }
+        file_put_contents($groupsFile, json_encode($groups));
+        echo json_encode(["status" => "ok"]);
+        exit;
+    }
+
+    if ($api === 'chat_delete' && isset($_POST['index'])) {
+        $index = (int)$_POST['index'];
+        $msgs = json_decode(file_get_contents($chatFile), true);
+        if (isset($msgs[$index])) {
+            array_splice($msgs, $index, 1);
+            file_put_contents($chatFile, json_encode($msgs));
+            echo json_encode(["status"=>"ok"]);
+        } else {
+            echo json_encode(["status"=>"error"]);
+        }
+        exit;
+    }
+
+    if ($api === 'note_delete' && isset($_POST['index'])) {
+        $index = (int)$_POST['index'];
+        $notes = json_decode(file_get_contents($notesFile), true);
+        if (isset($notes[$index])) {
+            array_splice($notes, $index, 1);
+            file_put_contents($notesFile, json_encode($notes));
+            echo json_encode(["status"=>"ok"]);
+        } else {
+            echo json_encode(["status"=>"error"]);
+        }
+        exit;
+    }
+
+    if ($api === 'meeting_delete_scheduled' && isset($_POST['index'])) {
+        $index = (int)$_POST['index'];
+        $meeting = json_decode(file_get_contents($meetingFile), true);
+        if (!isset($meeting['scheduled'])) $meeting['scheduled'] = [];
+        if (isset($meeting['scheduled'][$index])) {
+            array_splice($meeting['scheduled'], $index, 1);
+            file_put_contents($meetingFile, json_encode($meeting));
+            echo json_encode(["status"=>"ok"]);
+        } else {
+            echo json_encode(["status"=>"error"]);
+        }
         exit;
     }
 }
@@ -86,15 +180,25 @@ if (isset($_GET['api'])) {
 <meta charset="UTF-8">
 <title>Group: <?php echo htmlspecialchars($groupName); ?></title>
 <link rel="stylesheet" href="../styling/groupdetails.css" />
+<link rel="stylesheet" href="../styling/base.css" />
+<link rel="stylesheet" href="../styling/variables.css" />
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+  // Apply dark mode based on localStorage
+  const theme = localStorage.getItem('theme') || 'light';
+  document.documentElement.setAttribute('data-theme', theme);
+</script>
 </head>
 <body>
-<h2>Group: <?php echo htmlspecialchars($groupName); ?></h2>
+<div style="margin-bottom: 20px;">
+  <h2>Group: <?php echo htmlspecialchars($groupName); ?></h2>
+</div>
 <div>
     <button class="tab-btn" data-tab="chat">Chat</button>
     <button class="tab-btn" data-tab="notes">Notes</button>
     <button class="tab-btn" data-tab="meeting">Meeting</button>
     <button class="tab-btn" data-tab="games">Games</button>
+    <button class="tab-btn" data-tab="members">Members</button>
 </div>
 
 <!-- Chat -->
@@ -109,7 +213,8 @@ if (isset($_GET['api'])) {
     <h3>Notes</h3>
     <div id="notesList"></div>
     <input type="text" id="noteTitle" placeholder="Note title">
-    <textarea id="noteContent" placeholder="Note content" rows="4"></textarea>
+    <textarea id="noteContent" placeholder="Note content (optional if file uploaded)" rows="4"></textarea>
+    <input type="file" id="noteFile" accept=".pdf,.jpg,.jpeg,.png">
     <button id="noteShare">Share Note</button>
 </div>
 
@@ -117,8 +222,8 @@ if (isset($_GET['api'])) {
 <div class="tab-content" id="meeting">
     <h3>Meeting</h3>
     <div id="meetingList"></div>
-    <button id="meetingToggle">Join/Leave Meeting</button>
     <h4>Schedule a Meeting</h4>
+    <input type="text" id="meetingTitle" placeholder="Meeting title">
     <input type="datetime-local" id="meetingDateTime">
     <button id="meetingScheduleBtn">Schedule Meeting</button>
 </div>
@@ -130,6 +235,7 @@ if (isset($_GET['api'])) {
     <h4>Create a Quiz Question</h4>
     <input type="text" id="quizQuestion" placeholder="Question">
     <input type="text" id="quizAnswer" placeholder="Answer">
+    <textarea id="quizReview" placeholder="Review/Explanation (optional)" rows="3"></textarea>
     <button id="quizAddBtn">Add Quiz Question</button>
     <h4>Play Quiz</h4>
     <button id="quizStartBtn">Start Quiz</button>
@@ -139,6 +245,16 @@ if (isset($_GET['api'])) {
         <button id="quizSubmitBtn">Submit Answer</button>
         <div class="quiz-feedback" id="quizFeedback"></div>
     </div>
+</div>
+
+<!-- Members -->
+<div class="tab-content" id="members">
+    <h3>Group Members</h3>
+    <div id="membersList"></div>
+    <h4>Add Member</h4>
+    <input type="email" id="memberEmailInput" placeholder="Enter email to add">
+    <button id="addMemberBtn">Add Member</button>
+    <div id="memberMsg"></div>
 </div>
 
 <script>
@@ -153,9 +269,9 @@ $(".tab-btn").click(function(){
 function loadChat(){
     $.get("?group=<?php echo $groupName; ?>&api=chat_get",function(data){
         let html="";
-        data.forEach(m=> {
+        data.forEach((m,i)=> {
             let cls = m.name === userName ? "you" : "other";
-            html+=`<div class="chat-message ${cls}"><b>${m.name}</b>: ${m.text}<small>${m.time}</small></div>`;
+            html+=`<div class="chat-message ${cls}"><b>${m.name}</b>: ${m.text}<small>${m.time}</small> <button class="delete-chat" data-index="${i}">Delete</button></div>`;
         });
         $("#chatWindow").html(html);
         $("#chatWindow").scrollTop($("#chatWindow")[0].scrollHeight);
@@ -168,19 +284,81 @@ $("#chatSend").click(function(){
 });
 setInterval(loadChat,2000);
 
+$(document).on('click', '.delete-chat', function() {
+    let index = $(this).data('index');
+    if (confirm('Are you sure you want to delete this message?')) {
+        $.post("?group=<?php echo $groupName; ?>&api=chat_delete", {index: index}, function(response) {
+            if (response.status === "ok") {
+                loadChat();
+            } else {
+                alert("Error deleting message.");
+            }
+        }, "json");
+    }
+});
+
 // Notes
 function loadNotes(){
     $.get("?group=<?php echo $groupName; ?>&api=note_get",function(data){
         let html="";
-        data.forEach(n=> html+=`<div class="note-item"><div class="note-title">${n.title}</div><div class="note-content">${n.content}</div><small>by ${n.user} at ${n.time}</small></div>`);
+        data.forEach((n,i)=> {
+            let contentHtml = "";
+            if (n.type === 'file') {
+                let ext = n.file_name.split('.').pop().toLowerCase();
+                if (['jpg', 'jpeg', 'png'].includes(ext)) {
+                    contentHtml = `<img src="${n.file_path}" alt="${n.file_name}" style="max-width:100%; height:auto;">`;
+                } else {
+                    contentHtml = `<a href="${n.file_path}" target="_blank">Download ${n.file_name}</a>`;
+                }
+            } else {
+                contentHtml = n.content.replace(/\n/g, '<br>');
+            }
+            html += `<div class="note-item"><div class="note-title">${n.title}</div><div class="note-content">${contentHtml}</div><small>by ${n.user} at ${n.time}</small> <button class="delete-note" data-index="${i}">Delete</button></div>`;
+        });
         $("#notesList").html(html);
     },"json");
 }
 $("#noteShare").click(function(){
     let title=$("#noteTitle").val().trim();
     let content=$("#noteContent").val().trim();
-    if(!title || !content) return;
-    $.post("?group=<?php echo $groupName; ?>&api=note_add",{title:title, content:content, user:userName},()=>{ $("#noteTitle").val(""); $("#noteContent").val(""); loadNotes(); });
+    let fileInput = $("#noteFile")[0];
+    if(!title) return alert("Please enter a title.");
+    if(!content && !fileInput.files[0]) return alert("Please enter content or select a file.");
+    let formData = new FormData();
+    formData.append('title', title);
+    formData.append('content', content);
+    formData.append('user', userName);
+    if (fileInput.files[0]) {
+        formData.append('file', fileInput.files[0]);
+    }
+    $.ajax({
+        url: "?group=<?php echo $groupName; ?>&api=note_add",
+        type: "POST",
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function(response){
+            if(response.status === "ok") {
+                $("#noteTitle").val(""); $("#noteContent").val(""); $("#noteFile").val(""); loadNotes();
+            } else {
+                alert("Error adding note.");
+            }
+        },
+        dataType: "json"
+    });
+});
+
+$(document).on('click', '.delete-note', function() {
+    let index = $(this).data('index');
+    if (confirm('Are you sure you want to delete this note?')) {
+        $.post("?group=<?php echo $groupName; ?>&api=note_delete", {index: index}, function(response) {
+            if (response.status === "ok") {
+                loadNotes();
+            } else {
+                alert("Error deleting note.");
+            }
+        }, "json");
+    }
 });
 
 // Meeting
@@ -194,7 +372,7 @@ function loadMeeting(){
         }
         html+="<h4>Scheduled Meetings:</h4>";
         if(data.scheduled && data.scheduled.length > 0){
-            data.scheduled.forEach(m=> html+=`<div class="meeting-item">${m.datetime} scheduled by ${m.user}</div>`);
+            data.scheduled.forEach((m,i)=> html+=`<div class="meeting-item"><strong>${m.title || 'Untitled Meeting'}</strong> at ${m.datetime} scheduled by ${m.user} <button onclick="window.open('https://meet.google.com/new?authuser=0&pli=1', '_blank')">Join Google Meet</button> <button class="delete-meeting" data-index="${i}">Delete</button></div>`);
         } else {
             html+="<p>No meetings scheduled.</p>";
         }
@@ -205,11 +383,31 @@ $("#meetingToggle").click(function(){
     $.post("?group=<?php echo $groupName; ?>&api=meeting_toggle",{user:userName},()=> loadMeeting());
 });
 $("#meetingScheduleBtn").click(function(){
-    let dt=$("#meetingDateTime").val();
-    if(!dt) return;
-    $.post("?group=<?php echo $groupName; ?>&api=meeting_schedule",{datetime:dt, user:userName},()=>{ $("#meetingDateTime").val(""); loadMeeting(); });
+    let title = $("#meetingTitle").val().trim();
+    let dt = $("#meetingDateTime").val();
+    if(!title || !dt) return alert("Please fill meeting title and datetime.");
+    $.post("?group=<?php echo $groupName; ?>&api=meeting_schedule",{title: title, datetime:dt, user:userName}, function(response){
+        if(response.status === "ok") {
+            $("#meetingTitle").val(""); $("#meetingDateTime").val(""); loadMeeting();
+        } else {
+            alert("Error scheduling meeting.");
+        }
+    },"json");
 });
 setInterval(loadMeeting,3000);
+
+$(document).on('click', '.delete-meeting', function() {
+    let index = $(this).data('index');
+    if (confirm('Are you sure you want to delete this scheduled meeting?')) {
+        $.post("?group=<?php echo $groupName; ?>&api=meeting_delete_scheduled", {index: index}, function(response) {
+            if (response.status === "ok") {
+                loadMeeting();
+            } else {
+                alert("Error deleting meeting.");
+            }
+        }, "json");
+    }
+});
 
 // Games
 let quizzes = [];
@@ -217,15 +415,35 @@ function loadGames(){
     $.get("?group=<?php echo $groupName; ?>&api=quiz_get",function(data){
         quizzes = data.quizzes || [];
         let html="<h4>Quiz Questions:</h4>";
-        quizzes.forEach((q,i)=> html+=`<div class="game-item">Q${i+1}: ${q.question} (by ${q.user})</div>`);
+        quizzes.forEach((q,i)=> html+=`<div class="game-item"><span>Q${i+1}: ${q.question} (by ${q.user})</span> <button class="delete-quiz" data-index="${i}">Delete</button></div>`);
         $("#gamesList").html(html);
     },"json");
 }
+
+$(document).on('click', '.delete-quiz', function() {
+    let index = $(this).data('index');
+    if (confirm('Are you sure you want to delete this question?')) {
+        $.post("?group=<?php echo $groupName; ?>&api=quiz_delete", {index: index}, function(response) {
+            if (response.status === "ok") {
+                loadGames();
+            } else {
+                alert("Error deleting question.");
+            }
+        }, "json");
+    }
+});
 $("#quizAddBtn").click(function(){
     let q=$("#quizQuestion").val().trim();
     let a=$("#quizAnswer").val().trim();
-    if(!q || !a) return;
-    $.post("?group=<?php echo $groupName; ?>&api=quiz_add",{question:q, answer:a, user:userName},()=>{ $("#quizQuestion").val(""); $("#quizAnswer").val(""); loadGames(); });
+    let r=$("#quizReview").val().trim();
+    if(!q || !a) return alert("Please fill question and answer.");
+    $.post("?group=<?php echo $groupName; ?>&api=quiz_add",{question:q, answer:a, review:r, user:userName}, function(response){
+        if(response.status === "ok") {
+            $("#quizQuestion").val(""); $("#quizAnswer").val(""); $("#quizReview").val(""); loadGames();
+        } else {
+            alert("Error adding quiz question.");
+        }
+    },"json");
 });
 let currentQuizIndex = -1;
 $("#quizStartBtn").click(function(){
@@ -238,7 +456,8 @@ function showQuiz(){
     if(currentQuizIndex < quizzes.length){
         $("#quizQuestionDisplay").text(quizzes[currentQuizIndex].question);
         $("#quizUserAnswer").val("");
-        $("#quizFeedback").text("");
+        $("#quizFeedback").empty(); // Clear previous content
+        $("#viewReviewBtn").remove(); // Remove any previous review button
     } else {
         $("#quizContainer").hide();
         alert("Quiz finished!");
@@ -247,16 +466,66 @@ function showQuiz(){
 $("#quizSubmitBtn").click(function(){
     let ans = $("#quizUserAnswer").val().trim().toLowerCase();
     let correct = quizzes[currentQuizIndex].answer.toLowerCase();
+    let feedbackHtml = "";
     if(ans === correct){
-        $("#quizFeedback").text("Correct!").css("color","green");
+        feedbackHtml = "Correct!";
+        $("#quizFeedback").css("color","green");
     } else {
-        $("#quizFeedback").text("Wrong! Correct: " + quizzes[currentQuizIndex].answer).css("color","red");
+        feedbackHtml = "Wrong! Correct: " + quizzes[currentQuizIndex].answer;
+        $("#quizFeedback").css("color","red");
     }
-    setTimeout(()=>{ currentQuizIndex++; showQuiz(); }, 2000);
+    $("#quizFeedback").html(feedbackHtml);
+
+    // Check if review exists and add button
+    if (quizzes[currentQuizIndex].review && quizzes[currentQuizIndex].review.trim() !== "") {
+        let reviewBtn = $('<button id="viewReviewBtn" class="view-review-btn">View Review</button>');
+        $("#quizFeedback").append(reviewBtn);
+        reviewBtn.click(function() {
+            let reviewDisplay = $('<div class="review-display">' + quizzes[currentQuizIndex].review + '</div>');
+            $("#quizFeedback").append(reviewDisplay);
+            $(this).hide(); // Hide button after click
+            // Advance after showing review
+            setTimeout(()=>{ currentQuizIndex++; showQuiz(); }, 3000);
+        });
+    } else {
+        // No review, advance normally
+        setTimeout(()=>{ currentQuizIndex++; showQuiz(); }, 2000);
+    }
 });
 
+// Members
+function loadMembers(){
+    $.get("?group=<?php echo $groupName; ?>&api=members_get",function(data){
+        let html="<h4>Current Members:</h4>";
+        if(data.length > 0){
+            data.forEach(m=> html+=`<div class="member-item">Member: ${m}</div>`);
+        } else {
+            html+="<p>No members yet.</p>";
+        }
+        $("#membersList").html(html);
+    },"json");
+}
+$("#addMemberBtn").click(function(){
+    let email=$("#memberEmailInput").val().trim();
+    if(!email) return;
+    $.post("?group=<?php echo $groupName; ?>&api=members_add",{email:email},function(response){
+        if(response.status === "ok"){
+            $("#memberMsg").text("Member added successfully!").css("color","green");
+            $("#memberEmailInput").val("");
+            loadMembers();
+        } else {
+            $("#memberMsg").text("Error adding member.").css("color","red");
+        }
+    },"json");
+});
+
+
+
 // init
-loadChat(); loadNotes(); loadMeeting(); loadGames();
+loadChat(); loadNotes(); loadMeeting(); loadGames(); loadMembers();
+
+// Automatically open chat tab
+$("#chat").addClass("active");
 </script>
 </body>
 </html>

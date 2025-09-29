@@ -15,7 +15,7 @@ $response = ['success' => false, 'message' => ''];
 $servername = "localhost:3307";
 $username = "root";
 $password = "insathMYSQL#123"; // ⚠️ Default XAMPP password is empty
-$dbname = "notesvault2"; // ⚠️ Replace with your database name
+$dbname = "notesvault"; // ⚠️ Replace with your database name
 // ------------------------------------
 
 // Function to send a response and exit
