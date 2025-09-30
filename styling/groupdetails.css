@@ -391,16 +391,12 @@ h2, h3, h4 {
   box-sizing: border-box;
 }
 
-#quizReview {
-  resize: vertical;
-  min-height: 80px;
-}
 #quizQuestion:focus, #quizAnswer:focus, #quizUserAnswer:focus {
   border-color: var(--primary-color);
   outline: none;
 }
 
-#quizAddBtn, #quizStartBtn, #quizSubmitBtn {
+#quizAddBtn, #quizStartBtn, #quizSubmitBtn, #quizReviewBtn, #backToGamesBtn {
   padding: 10px 20px;
   background: var(--gradient-primary);
   color: white;
@@ -412,7 +408,7 @@ h2, h3, h4 {
   box-shadow: var(--shadow-light);
   transition: var(--transition);
 }
-#quizAddBtn:hover, #quizStartBtn:hover, #quizSubmitBtn:hover {
+#quizAddBtn:hover, #quizStartBtn:hover, #quizSubmitBtn:hover, #quizReviewBtn:hover, #backToGamesBtn:hover {
   background: var(--gradient-hover);
   transform: translateY(-2px);
   box-shadow: var(--shadow-medium);
@@ -437,7 +433,7 @@ h2, h3, h4 {
   font-size: 1rem;
 }
 
-.view-review-btn {
+.quiz-review-btn {
   margin-top: 10px;
   padding: 8px 16px;
   background: var(--gradient-primary);
@@ -450,13 +446,13 @@ h2, h3, h4 {
   transition: var(--transition);
 }
 
-.view-review-btn:hover {
+.quiz-review-btn:hover {
   background: var(--gradient-hover);
   transform: translateY(-2px);
   box-shadow: var(--shadow-medium);
 }
 
-.review-display {
+.quiz-review-display {
   margin-top: 10px;
   padding: 12px;
   background: var(--card-bg);
@@ -465,6 +461,18 @@ h2, h3, h4 {
   font-style: italic;
   color: var(--text-secondary);
   line-height: 1.5;
+}
+
+.quiz-review-box {
+  margin-top: 10px;
+  padding: 12px;
+  background: var(--card-bg);
+  border-radius: var(--border-radius);
+  border: 2px solid var(--primary-color);
+  font-style: italic;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  white-space: pre-wrap;
 }
 
 /* Members */
