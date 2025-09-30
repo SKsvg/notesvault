@@ -76,3 +76,4 @@ if (mail($email, $subject, $message, $headers)) {
     echo json_encode(["success" => true, "message" => "Added to group, but email could not be sent (check server configuration)"]);
 }
 ?>
+
