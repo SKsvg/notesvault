@@ -119,6 +119,21 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    if (mobileLogoutBtn) {
+        mobileLogoutBtn.addEventListener("click", () => {
+            fetch('logout.php', { method: 'POST' })
+                .then(() => {
+                    localStorage.removeItem("isLoggedIn");
+                    window.location.href = "login.html";
+                })
+                .catch(error => {
+                    console.error('Logout failed:', error);
+                    localStorage.removeItem("isLoggedIn");
+                    window.location.href = "login.html";
+                });
+        });
+    }
+
     // Run the function to set the initial state of the header
     updateHeader();
 });
