@@ -6,10 +6,10 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 // Database connection details
-$servername = "localhost"; // Change this to your database server name
+$servername = "localhost:3307"; // Change this to your database server name
 $username = "root"; // Change this to your database username
-$password = ""; // Change this to your database password
-$dbname = "notesvault"; // Change this to your database name
+$password = "insathMYSQL#123"; // Change this to your database password
+$dbname = "notes_db"; // Change this to your database name
 
 // Create connection
 $conn = new mysqli($servername, $username, $password, $dbname);

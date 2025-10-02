@@ -23,6 +23,7 @@ if (!isset($_SESSION['user_id'])) {
 <body>
     
   <?php include '../components/header.php'; ?>
+
 <main class="dashboard-container">
     <div class="dashboard-grid">
         <section class="profile-card" style="height: 630px;">
@@ -106,8 +107,9 @@ if (!isset($_SESSION['user_id'])) {
                 <div class="stat-item"><div class="stat-value">3</div><div class="stat-label">Subjects</div></div>
                 <div class="stat-item"><div class="stat-value">0%</div><div class="stat-label">Completion</div></div>
             </div>
+            
         </section>
-        <section class="notes-section" style="height: 630px; width: 710px;">
+        <!-- <section class="notes-section" style="height: 630px; width: 710px;">
             <div class="section-header">
                 <h2><i class="fas fa-book"></i> Your Notes</h2>
                 <div class="section-actions">
@@ -119,7 +121,29 @@ if (!isset($_SESSION['user_id'])) {
                     <a href="upload.php"><button class="add-note-btn"><i class="fas fa-plus-circle"></i><span>Add New Notes</span></button></a>
                 </div>
             </div>
-        </section>
+
+        </section> -->
+                    <div class="calendar-card">
+            <div class="calendar-header">
+                <button class="calendar-nav-btn" id="prevMonth"><i class="fas fa-chevron-left"></i></button>
+                <h3 id="currentMonthYear">
+                <i class="fas fa-calendar-alt"></i> </h3>
+                <button class="calendar-nav-btn" id="nextMonth"><i class="fas fa-chevron-right"></i></button>
+                <button id="addEventBtn" class="btn-primary" style="margin-left: 10px;">
+                    <i class="fas fa-plus"></i> Add Task
+            </div>
+            <div class="calendar-grid-labels calendar-grid">
+                <div class="day-label">Sun</div>
+                <div class="day-label">Mon</div>
+                <div class="day-label">Tue</div>
+                <div class="day-label">Wed</div>
+                <div class="day-label">Thu</div>
+                <div class="day-label">Fri</div>
+                <div class="day-label">Sat</div>
+            </div>
+            <div class="calendar-grid" id="calendarDates">
+                </div>
+            </div>  
         <section class="pyqs-section">
             <div class="section-header">
                 <h2><i class="fas fa-file-alt"></i> Previous Year Questions</h2>
@@ -179,6 +203,63 @@ if (!isset($_SESSION['user_id'])) {
 <script src="../scripts/header.js" defer></script>
 <script src="../scripts/script.js" defer></script>
 <script src="../scripts/dashboard.js"></script>
+
+
+<div id="addEventModal" class="modal" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Add New Task/Event</h3>
+            <button id="closeEventModal" class="close-modal" aria-label="Close modal">&times;</button>
+        </div>
+        <form id="eventForm">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="eventTitle">Task Title / Description</label>
+                    <input type="text" id="eventTitle" required placeholder="e.g., Submit Database Assignment">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="eventDate">Date</label>
+                        <input type="date" id="eventDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="eventType">Event Type</label>
+                        <select id="eventType" required>
+                            <option value="Assignment">Assignment</option>
+                            <option value="Exam">Exam</option>
+                            <option value="Meeting">Meeting</option>
+                            <option value="Project">Project Deadline</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="form-actions" style="border-top: 1px solid var(--border-color); padding: 12px 20px 12px 20px;">
+                <button type="button" class="cancel-btn" onclick="document.getElementById('addEventModal').classList.remove('active');">Cancel</button>
+                <button type="submit" class="save-btn">Save Task</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="eventDetailModal" class="modal" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal-content event-details-content" style="max-width: 350px;">
+        <div class="modal-header">
+            <h3 id="eventDetailTitle">Task Details</h3>
+            <button id="closeDetailModal" class="close-modal" aria-label="Close modal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p><strong>Date:</strong> <span id="detailDate"></span></p>
+            <div id="eventListContainer">
+                </div>
+            
+            <button id="addNewTaskForDayBtn" class="btn-secondary">
+                <i class="fas fa-plus"></i> Add New Task for this Day
+            </button>
+        </div>
+    </div>
+</div>
 
 </body>
 </html>

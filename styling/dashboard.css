@@ -1115,3 +1115,220 @@
   object-fit: cover;
   display: block;
 }
+
+/* --- Calendar Card - Revised to be a large feature (6 columns) --- */
+.calendar-card {
+  /* Change the span to 6 to make it a large, prominent feature (50% of the dashboard row) */
+  grid-column: span 6; 
+  background: var(--card-bg);
+  border-radius: 1.25rem;
+  padding: 1.75rem;
+  box-shadow: var(--card-shadow);
+  border: 1px solid var(--border-color);
+  height: fit-content;
+  display: flex;
+  flex-direction: column;
+
+  /* Constraints for a large view - Using max-width to respect the 710px request */
+  max-width: 710px; /* Limits the width of the card */
+  /* If you want a fixed minimum height (approx. 630px tall), use this: */
+  min-height: 630px; 
+  /* Note: The final rendered size depends on parent container and grid context */
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  color: var(--text-primary);
+}
+
+.calendar-header h3 {
+  font-size: 1.5rem; /* Slightly larger header for a large card */
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.calendar-header h3 i {
+  margin-right: 0.875rem;
+  color: var(--primary-500);
+  font-size: 1.25rem;
+}
+
+.calendar-nav-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem; /* Larger buttons */
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0.5rem;
+  transition: color 0.2s ease;
+}
+
+.calendar-nav-btn:hover {
+  color: var(--primary-500);
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr); 
+  text-align: center;
+  gap: 0.5rem; /* Increased gap for larger cells */
+  flex-grow: 1; /* Allows the grid to fill the min-height of the card */
+}
+
+.day-label {
+  font-size: 0.875rem; /* Larger day labels */
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  font-weight: 600;
+  padding-bottom: 0.75rem;
+}
+
+.date-cell {
+  padding: 0.75rem; /* Increased padding for larger circular dates */
+  font-size: 1rem;
+  color: var(--text-primary);
+  border-radius: 50%;
+  aspect-ratio: 1 / 1; 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  /* Ensure the cell takes up the available grid space */
+  min-height: 40px; 
+}
+
+.date-cell:hover:not(.current-month-false) {
+  background-color: var(--primary-50);
+  color: var(--primary-600);
+}
+
+.current-month-false {
+  color: var(--text-secondary);
+  opacity: 0.5;
+  cursor: default;
+}
+
+.today {
+  background-color: var(--primary-100);
+  border: 2px solid var(--primary-300);
+  font-weight: 700;
+}
+
+.selected-date {
+  background-color: var(--primary-500);
+  color: white !important;
+  font-weight: 700;
+  box-shadow: 0 4px 10px rgba(0, 140, 45, 0.3);
+}
+
+/* Event marker dot */
+.has-event {
+    position: relative;
+}
+
+.has-event::after {
+    content: '';
+    position: absolute;
+    bottom: 0.3rem;
+    width: 6px; /* Larger dot */
+    height: 6px;
+    background-color: var(--primary-500);
+    border-radius: 50%;
+    /* Override for selected/today to ensure visibility */
+    background-color: var(--text-primary); 
+}
+.selected-date.has-event::after {
+    background-color: white; 
+}
+
+/* --- Responsive Adjustments for Calendar --- */
+
+/* Tablet/Small Desktop (when dashboard grid collapses) */
+@media (max-width: 1200px) {
+  .calendar-card {
+    grid-column: span 12; /* Takes full width on smaller screens */
+    max-width: 100%; /* Allows it to stretch to the container edge */
+    min-height: 500px; /* Slightly reduce minimum height */
+  }
+}
+
+/* Mobile Screens */
+@media (max-width: 576px) {
+  .calendar-card {
+    padding: 1rem;
+    min-height: 400px; /* Further reduction for mobile screen real estate */
+  }
+  .calendar-header h3 {
+    font-size: 1.25rem;
+  }
+  .calendar-nav-btn {
+    font-size: 1.25rem;
+  }
+  .date-cell {
+    padding: 0.5rem;
+    font-size: 0.875rem;
+    min-height: unset;
+  }
+  .has-event::after {
+    width: 4px;
+    height: 4px;
+    bottom: 0.2rem;
+  }
+  
+}
+/* Styling for the list of events inside the detail modal */
+#eventListContainer {
+    margin-top: 10px;
+}
+
+.event-item {
+    padding: 10px;
+    margin-bottom: 8px;
+    border-radius: var(--border-radius-sm);
+    background-color: var(--card-hover-bg); /* Use a light color to distinguish items */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-left: 4px solid var(--accent-color); /* Visual marker */
+}
+
+.event-item-info {
+    flex-grow: 1;
+}
+
+.event-item-title {
+    font-weight: 600;
+    color: var(--text-color-primary);
+    font-size: 1rem;
+}
+
+.event-item-type {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-color-secondary);
+}
+
+.event-actions button {
+    background: none;
+    border: none;
+    color: var(--text-color-secondary);
+    cursor: pointer;
+    font-size: 1rem;
+    margin-left: 10px;
+    transition: color 0.2s;
+}
+
+.event-actions button:hover {
+    color: var(--accent-color);
+}
+
+.event-actions .delete-btn:hover {
+    color: var(--color-danger); /* Red for delete button */
+}
+
+.btn-secondary { background: var(--primary-500); color:#008c2d4d; border:none; padding:8px 14px; border-radius:8px; }
