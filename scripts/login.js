@@ -91,7 +91,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const formData = new FormData(loginForm);
 
         try {
-            const response = await fetch('.../pages/login.php', {
+            const response = await fetch('../pages/login.php', {
                 method: 'POST',
                 body: formData,
             });
