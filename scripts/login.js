@@ -99,6 +99,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             if (data.success) {
                 localStorage.setItem("isLoggedIn", "true");
+                localStorage.setItem("userEmail", emailInput.value);
                 
                 // --- THIS LINE IS REMOVED TO PREVENT THE ERROR ---
                 // updateHeader(); 

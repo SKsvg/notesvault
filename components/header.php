@@ -68,7 +68,7 @@
             </button>
             <div class="profile-dropdown">
               <a href="dashboard.php" class="dropdown-item">Dashboard</a>
-              <a href="#" class="dropdown-item logoutBtn" id="logoutBtn">
+              <a href="../pages/logout.php" class="dropdown-item logoutBtn" id="logoutBtn">
                 <i class="fas fa-sign-out-alt"></i>
                 <span>Logout</span>
               </a>
@@ -110,9 +110,13 @@
         <div class="mobile-actions">
           <button class="theme-toggle mobile-theme-toggle" aria-label="Toggle dark mode"></button>
           <div class="mobile-auth-buttons">
-            <button class="btn btn-secondary">Login</button>
-            <button class="btn btn-primary">Sign Up</button>
+            <button onclick="location.href='login.html'" class="btn btn-secondary">Login</button>
+            <button onclick="location.href='signup.html'" class="btn btn-primary">Sign Up</button>
           </div>
+          <a href="../pages/logout.php" class="dropdown-item logoutBtn mobile-logout-btn hidden" id="mobileLogoutBtn">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Logout</span>
+          </a>
         </div>
       </nav>
       <div class="overlay"></div>

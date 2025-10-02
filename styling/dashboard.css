@@ -906,6 +906,21 @@
     padding: 6rem 1rem;
   }
 
+  .dashboard-grid {
+    gap: 1rem;
+  }
+
+  .profile-card,
+  .stats-card,
+  .notes-section,
+  .pyqs-section {
+    padding: 1rem;
+  }
+
+  .pyqs-section {
+    margin-top: 1rem;
+  }
+
   .section-header {
     flex-direction: column;
     align-items: flex-start;
@@ -953,6 +968,16 @@
 
   .modal-content {
     margin: 0 1rem;
+  }
+}
+
+/* Mobile height adjustments */
+@media (max-width: 768px) {
+  .profile-card,
+  .stats-card,
+  .notes-section {
+    height: auto !important;
+    width: auto !important;
   }
 }
 

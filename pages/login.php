@@ -23,6 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Password is correct, create a session
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['user_name'] = $user['name'];
+                $_SESSION['user_email'] = $email;
                 $_SESSION['logged_in'] = true;
 
                 $response['success'] = true;

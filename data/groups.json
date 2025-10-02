@@ -1,10 +1,1 @@
-[
-    {
-        "name": "cs",
-        "creator": "demo@user.com",
-        "members": [
-            "demo@user.com"
-        ],
-        "created": "2025-09-25 11:19:42"
-    }
-]
+{"0":{"name":"cs","creator":"demo@user.com","members":["demo@user.com"],"created":"2025-09-25 11:19:42"},"cs":{"members":[]},"1":{"name":"ABC","creator":"demo@user.com","members":["demo@user.com"],"created":"2025-09-27 17:22:19"},"hi":{"members":{"1":"nisansalaweerasingha3848@gmail.com","2":"savinisithumini12@gmail.com"}},"Sachini":{"members":[]},"my":{"members":[]},"New":{"members":[]},"ABC":{"members":{"2":"sachini4@gmail.com"}},"hello":{"members":["nisansalaweerasingha3848@gmail.com"]},"New2":{"members":[]},"Hello1":{"members":["peter@gmail.com","hello@gmail.com","hhhh@gmail.com"]},"MY":{"members":["peter@gmail.com","no@gmail.com"]},"NNN":{"members":["ransisi22@gmail.com","peter@gmail.com"]},"Mynew":{"members":["sdfsd","gg","ransisi22@gmail.com"]}}

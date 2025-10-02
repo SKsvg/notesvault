@@ -25,6 +25,7 @@
     />
 
     <!-- CSS -->
+     <link rel="stylesheet" href="../styling/chatbot.css" />
     <link rel="stylesheet" href="../styling/home.css" />
     <link rel="stylesheet" href="../styling/base.css" />
     <link rel="stylesheet" href="../styling/variables.css" />
@@ -141,10 +142,12 @@
 
     <!-- Footer -->
     <?php include '../components/footer.php'; ?>
+    <?php include '../components/chatbot.php'; ?>
 
     <!-- JavaScript -->
     <script src="../scripts/header.js" defer></script>
     <script src="../scripts/script.js" defer></script>
+    <script src="../scripts/chatbot.js" defer></script>
     <script>
       // Example JavaScript code to demonstrate functionality
       document.addEventListener('DOMContentLoaded', function () {
