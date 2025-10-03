@@ -77,8 +77,7 @@
         <div class="container">
           <h1>Welcome to our mcq generating section</h1>
           <ul class="subtitle">
-            <li>Here you can generate your own mcq question using preffered AI tool</li>
-            <li>You can create mcq question</li>
+            <li>Create your own mcq question</li>
             <li>Test as you like</li>
             <li>See your performance</li>
           </ul>

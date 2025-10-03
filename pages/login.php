@@ -1,6 +1,6 @@
 <?php
 session_start(); // Start the session
-require 'db.php'; // Include the database connection file
+require __DIR__ . '/db.php'; // Include the database connection file with absolute path
 
 header('Content-Type: application/json');
 
@@ -32,7 +32,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $response['message'] = 'Invalid email or password.';
             }
         } catch (PDOException $e) {
-            $response['message'] = 'An unexpected error occurred.';
+            // Include the exception message for debugging
+            $response['message'] = 'Database error: ' . $e->getMessage();
         }
     }
 } else {
