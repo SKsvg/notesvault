@@ -109,7 +109,7 @@ if (!isset($_SESSION['user_id'])) {
             </div>
             
         </section>
-        <!-- <section class="notes-section" style="height: 630px; width: 710px;">
+        <section class="notes-section" style="height: 630px; width: 710px;">
             <div class="section-header">
                 <h2><i class="fas fa-book"></i> Your Notes</h2>
                 <div class="section-actions">
@@ -122,7 +122,7 @@ if (!isset($_SESSION['user_id'])) {
                 </div>
             </div>
 
-        </section> -->
+        </section> 
                     <div class="calendar-card">
             <div class="calendar-header">
                 <button class="calendar-nav-btn" id="prevMonth"><i class="fas fa-chevron-left"></i></button>
