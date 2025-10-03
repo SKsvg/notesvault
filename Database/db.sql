@@ -25,7 +25,8 @@ CREATE TABLE `notes` (
   `file_path` varchar(255) NOT NULL,
   `upload_date` timestamp NOT NULL DEFAULT current_timestamp(),
   `uploader` varchar(100) DEFAULT 'Anonymous',
-  `uploader_id` varchar(50) DEFAULT NULL
+  `uploader_id` varchar(50) DEFAULT NULL,
+  `is_trashed` TINYINT(1) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE `users` (

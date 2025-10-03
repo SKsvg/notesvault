@@ -27,6 +27,7 @@ $sql = "SELECT id, title, branch, semester, tags, file_path, uploader, upload_da
 
 // Add WHERE clause for filtering
 $where_clauses = [];
+$where_clauses[] = "is_trashed = 0";
 if (!empty($branch)) {
     $where_clauses[] = "branch = '" . $conn->real_escape_string($branch) . "'";
 }
@@ -71,12 +72,12 @@ if ($result->num_rows > 0) {
 $jsonNotes = json_encode($notes);
 
 // Add the uploader column to the query and to the note card
-// Note: Your HTML/JS assumes an 'uploader' field in the note object. 
+// Note: Your HTML/JS assumes an 'uploader' field in the note object.
 // I've added a default value in the database and included it here.
 
 // Fetch unique branches and semesters for filter dropdowns
 $unique_branches = [];
-$sql_branches = "SELECT DISTINCT branch FROM notes ORDER BY branch";
+$sql_branches = "SELECT DISTINCT branch FROM notes WHERE is_trashed = 0 ORDER BY branch";
 $result_branches = $conn->query($sql_branches);
 if ($result_branches->num_rows > 0) {
     while ($row = $result_branches->fetch_assoc()) {
@@ -85,7 +86,7 @@ if ($result_branches->num_rows > 0) {
 }
 
 $unique_semesters = [];
-$sql_semesters = "SELECT DISTINCT semester FROM notes ORDER BY semester ASC";
+$sql_semesters = "SELECT DISTINCT semester FROM notes WHERE is_trashed = 0 ORDER BY semester ASC";
 $result_semesters = $conn->query($sql_semesters);
 if ($result_semesters->num_rows > 0) {
     while ($row = $result_semesters->fetch_assoc()) {
@@ -193,6 +194,7 @@ $conn->close();
                 <a class="download-button" href="<?php echo htmlspecialchars($note['file_path']); ?>" download="<?php echo htmlspecialchars(basename($note['file_path'])); ?>">
                     <i class="fas fa-download"></i> &nbsp; Download
                 </a>
+                <a href="delete_note.php?id=<?php echo $note['id']; ?>" class="delete-button" onclick="return confirm('Are you sure you want to delete this note?')"><i class="fas fa-trash"></i> &nbsp; Delete</a>
             </div>
         </div>
         <?php endforeach; ?>
@@ -320,7 +322,7 @@ $conn->close();
                         } else {
                             modalElements.downloadButton.style.display = 'none';
                         }
-                        
+
                         noteDetailModal.style.display = 'flex';
                         document.body.style.overflow = 'hidden';
                     }
@@ -332,7 +334,7 @@ $conn->close();
                 noteDetailModal.style.display = 'none';
                 document.body.style.overflow = 'auto';
             });
-            
+
             window.addEventListener('click', (e) => {
                 if (e.target === noteDetailModal) {
                     noteDetailModal.style.display = 'none';

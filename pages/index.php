@@ -56,7 +56,7 @@
               <p>Notes Organized by <span id="typewriter">Subject</span></p>
             </div>
             <form
-              action="pages/notes.php"
+              action="notes.php"
               method="get"
               class="search-form"
             >
@@ -73,7 +73,7 @@
                 </svg>
                 <input
                   type="text"
-                  name="query"
+                  name="search"
                   placeholder="Search"
                   aria-label="Search notes"
                 />
@@ -152,16 +152,20 @@
       // Example JavaScript code to demonstrate functionality
       document.addEventListener('DOMContentLoaded', function () {
         const searchForm = document.querySelector('.search-form');
-        const searchInput = document.querySelector('input[name="query"]');
+        const searchInput = document.querySelector('input[name="search"]');
 
         searchForm.addEventListener('submit', function (e) {
           e.preventDefault();
-          const query = searchInput.value.trim();
+          const query = searchInput.value.trim().toLowerCase();
           if (query) {
-            // Redirect to notes page with query parameter
-            window.location.href = `pages/notes.php?query=${encodeURIComponent(query)}`;
-          }
-        });
+            // Check for special keywords
+            if (query === 'dashboard') {
+              window.location.href = 'dashboard.php';
+            } else if (query === 'groups') {
+              window.location.href = 'groups.php';
+            } else if (query === 'notes') {
+              window.location.href = 'notes.php';
+            } else {
       });
 
       // Fetch example data from the API and log it
