@@ -192,6 +192,12 @@
   color: inherit;
 }
 
+.delete-button {
+  background-color: var(--error);
+  color: white;
+}
+
+
 /* Modal */
 .modal {
   position: fixed;

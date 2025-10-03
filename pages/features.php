@@ -175,7 +175,7 @@ if (!isset($_SESSION['user_id'])) {
               </div>
             </article>
 
-             <!--Study Group Feature-->
+            <!--Study Group Feature-->
             <article class="feature-card" id="studygroup-feature">
               <div class="feature-icon">
                 <i class="fa-solid fa-user-group"></i>
@@ -183,8 +183,8 @@ if (!isset($_SESSION['user_id'])) {
               <div class="feature-content">
                 <h2>Study-Group</h2>
                 <p>
-                  Make a group with friends, 
-                  share notes, chat, schedule meetings, and 
+                  Make a group with friends,
+                  share notes, chat, schedule meetings, and
                   play subject-based games in one collaborative space.
                 </p>
                 <a
@@ -193,6 +193,25 @@ if (!isset($_SESSION['user_id'])) {
                 >
                   Study Group &nbsp; <i class="fas fa-arrow-right"></i>
                 </a>
+            </article>
+
+            <!-- Trash Bin Feature -->
+            <article class="feature-card" id="trashbin-feature">
+              <div class="feature-icon">
+                <i class="fas fa-trash"></i>
+              </div>
+              <div class="feature-content">
+                <h2>Trash Bin</h2>
+                <p>
+                  Safely manage deleted notes. Restore accidentally deleted notes or permanently remove them from the trash bin.
+                </p>
+                <a
+                  href="bin.php"
+                  class="btn btn-primary"
+                >
+                  View Trash Bin &nbsp; <i class="fas fa-arrow-right"></i>
+                </a>
+              </div>
             </article>
           </div>
         </div>

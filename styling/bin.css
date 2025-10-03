@@ -1,0 +1,141 @@
+* {
+    margin: 0px;
+    padding: 0px;
+}
+
+body {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.trash-bin-title-box {
+  background: url("../assets/index/images/back.jpg") center/cover no-repeat;
+  color: var(--white);
+  padding: 4rem 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.trash-bin-title-box h1 {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  color: var(--white);
+  text-align: center;
+}
+
+#pge_title {
+    text-align: center;
+    margin-top: 2vh;
+    font-size: 5vh;
+    color: var(--text-primary);
+}
+
+#note {
+    text-align: center;
+    margin-top: 1.2vh;
+    color: var(--text-primary);
+}
+
+.page-title {
+  font-size: 2rem;
+  font-weight: bold;
+  margin: 1rem;
+  color: var(--text-primary);
+}
+
+.notes-section {
+  padding: 2rem;
+}
+
+.notes-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  justify-content: center;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.note-card {
+  background: var(--card-bg);
+  color: var(--text-primary);
+  border-radius: 0.75rem;
+  box-shadow: var(--card-shadow);
+  padding: 1.5rem;
+  width: 280px;
+  max-width: 400px;
+  margin: 15px auto;
+  transition: transform 0.3s ease;
+  text-align: center;
+}
+
+.note-card:hover {
+  transform: translateY(-5px);
+}
+
+.note-card-body h3 {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  color: var(--text-primary);
+}
+
+.note-card-body p {
+  font-size: 0.95rem;
+  margin: 0.25rem 0;
+  color: var(--text-secondary);
+}
+
+.actions {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: space-between;
+}
+
+.actions button {
+  padding: 0.5rem 0.75rem;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  background-color: var(--error);
+  color: var(--white);
+  font-weight: bold;
+  transition: background-color 0.2s ease;
+}
+
+.actions button:hover {
+  background-color: #d32f2f;
+}
+
+.actions button.restore-button {
+  background-color: var(--success);
+}
+
+.actions button.restore-button:hover {
+  background-color: #2e7d32;
+}
+
+.note-card h3 {
+    margin-bottom: 10px;
+}
+
+.note-card button {
+    margin: 5px;
+    padding: 8px 12px;
+    border: none;
+    background-color: var(--primary-500);
+    color: var(--white);
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.note-card button:hover {
+    background-color: var(--primary-600);
+}
