@@ -349,7 +349,7 @@
 
 .quiz-submit-row .quiz-btn {
   padding: 0.75rem 1.5rem;
-  background: var(--primary-500);
+  background: #38a578;
   color: white;
   border: none;
   border-radius: 8px;
@@ -357,4 +357,16 @@
   font-weight: 600;
   cursor: pointer;
   flex: 0;
+}
+.quiz-submit-row :hover{
+  background: #6fc8a3;
+}
+.quiz-btn :hover{
+  background:  #6fc8a3;
+}
+.quiz-submit-row :active{
+  background: #bdebd8;
+}
+.quiz-btn :active{
+  background:  #bdebd8;
 }
