@@ -109,20 +109,7 @@ if (!isset($_SESSION['user_id'])) {
             </div>
             
         </section>
-        <section class="notes-section" style="height: 630px; width: 710px;">
-            <div class="section-header">
-                <h2><i class="fas fa-book"></i> Your Notes</h2>
-                <div class="section-actions">
-                    <a href="upload.php" class="btn btn-primary" id="upload-note-btn" style="color:white;" onmouseover="this.style.color='white'" onmouseout="this.style.color='white'"><i class="fas fa-cloud-upload-alt"></i> Upload Notes</a>
-                </div>
-            </div>
-            <div class="notes-grid">
-                <div class="add-note-card" style="width: 160px; display: flex;">
-                    <a href="upload.php"><button class="add-note-btn"><i class="fas fa-plus-circle"></i><span>Add New Notes</span></button></a>
-                </div>
-            </div>
-
-        </section> 
+         
                     <div class="calendar-card">
             <div class="calendar-header">
                 <button class="calendar-nav-btn" id="prevMonth"><i class="fas fa-chevron-left"></i></button>
@@ -144,6 +131,20 @@ if (!isset($_SESSION['user_id'])) {
             <div class="calendar-grid" id="calendarDates">
                 </div>
             </div>  
+        <section class="notes-section" style="height: 630px; width: 710px;">
+            <div class="section-header">
+                <h2><i class="fas fa-book"></i> Your Notes</h2>
+                <div class="section-actions">
+                    <a href="upload.php" class="btn btn-primary" id="upload-note-btn" style="color:white;" onmouseover="this.style.color='white'" onmouseout="this.style.color='white'"><i class="fas fa-cloud-upload-alt"></i> Upload Notes</a>
+                </div>
+            </div>
+            <div class="notes-grid">
+                <div class="add-note-card" style="width: 160px; display: flex;">
+                    <a href="upload.php"><button class="add-note-btn"><i class="fas fa-plus-circle"></i><span>Add New Notes</span></button></a>
+                </div>
+            </div>
+
+        </section>
         <section class="pyqs-section">
             <div class="section-header">
                 <h2><i class="fas fa-file-alt"></i> Previous Year Questions</h2>
