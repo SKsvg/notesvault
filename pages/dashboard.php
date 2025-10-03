@@ -131,7 +131,7 @@ if (!isset($_SESSION['user_id'])) {
             <div class="calendar-grid" id="calendarDates">
                 </div>
             </div>  
-        <section class="notes-section" style="height: 630px; width: 710px;">
+        <section class="pyqs-section" >
             <div class="section-header">
                 <h2><i class="fas fa-book"></i> Your Notes</h2>
                 <div class="section-actions">
@@ -145,7 +145,7 @@ if (!isset($_SESSION['user_id'])) {
             </div>
 
         </section>
-        <section class="pyqs-section">
+        <!-- <section class="pyqs-section">
             <div class="section-header">
                 <h2><i class="fas fa-file-alt"></i> Previous Year Questions</h2>
                 <div class="section-actions">
@@ -197,7 +197,7 @@ if (!isset($_SESSION['user_id'])) {
                     </tbody>
                 </table>
             </div>
-        </section>
+        </section> -->
     </div>
 </main>
 <?php include '../components/footer.php'; ?>

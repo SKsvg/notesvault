@@ -1122,7 +1122,7 @@
   grid-column: span 6; 
   background: var(--card-bg);
   border-radius: 1.25rem;
-  padding: 1.75rem;
+  padding: 1.5rem;
   box-shadow: var(--card-shadow);
   border: 1px solid var(--border-color);
   height: fit-content;
@@ -1132,7 +1132,8 @@
   /* Constraints for a large view - Using max-width to respect the 710px request */
   max-width: 710px; /* Limits the width of the card */
   /* If you want a fixed minimum height (approx. 630px tall), use this: */
-  min-height: 630px; 
+  min-height: 530px;
+  max-height: 630px;;
   /* Note: The final rendered size depends on parent container and grid context */
 }
 
@@ -1184,7 +1185,7 @@
   color: var(--text-secondary);
   text-transform: uppercase;
   font-weight: 600;
-  padding-bottom: 0.75rem;
+  /*padding-bottom: 0.2rem;*/
 }
 
 .date-cell {
