@@ -9,7 +9,7 @@ error_reporting(E_ALL);
 $servername = "localhost:3307"; // Change this to your database server name
 $username = "root"; // Change this to your database username
 $password = "insathMYSQL#123"; // Change this to your database password
-$dbname = "notes_db"; // Change this to your database name
+$dbname = "notes"; // Change this to your database name
 
 // Create connection
 $conn = new mysqli($servername, $username, $password, $dbname);
