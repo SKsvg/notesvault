@@ -193,8 +193,27 @@
 }
 
 .delete-button {
-  background-color: var(--error);
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 0.9rem;
+  min-width: 110px;
+  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+}
+
+.delete-button {
+  background-color: #dc3545; /* Bootstrap danger red */
   color: white;
+}
+
+.delete-button:hover {
+  background-color: #c82333; /* Darker red on hover */
 }
 
 
