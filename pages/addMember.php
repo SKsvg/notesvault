@@ -37,7 +37,7 @@ $stmt->execute([$email]);
 $userId = $stmt->fetchColumn();
 
 if (!$userId) {
-    echo json_encode(["success" => false, "message" => "this mail is not in notesvault member"]);
+    echo json_encode(["success" => false, "message" => "This mail is not in notesvault member"]);
     exit;
 }
 
@@ -61,19 +61,12 @@ if ($existing) {
     exit;
 }
 
-// Add to members
-$stmt = $pdo->prepare("INSERT INTO group_members (group_id, user_id) VALUES (?, ?)");
-$stmt->execute([$groupId, $userId]);
-
-// Send email invitation
-$subject = "Invitation to join study group: $groupName";
-$message = "Hello,\n\nYou have been invited to join the study group '$groupName' on NotesVault.\n\nPlease log in to your account to access the group.\n\nBest regards,\nNotesVault Team";
-$headers = "From: noreply@notesvault.com\r\n";
-
-if (mail($email, $subject, $message, $headers)) {
-    echo json_encode(["success" => true, "message" => "Invitation sent to $email and added to group"]);
+// Insert into group_members
+$insert = $pdo->prepare("INSERT INTO group_members (group_id, user_id) VALUES (?, ?)");
+if ($insert->execute([$groupId, $userId])) {
+    echo json_encode(["success" => true, "message" => "Successfully added to group"]);
 } else {
-    echo json_encode(["success" => true, "message" => "Added to group, but email could not be sent (check server configuration)"]);
+    echo json_encode(["success" => false, "message" => "Failed to add user to group"]);
 }
 ?>
 
