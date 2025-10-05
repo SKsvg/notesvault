@@ -497,46 +497,60 @@ function endQuiz() {
 loadGames();
 
 // ------------------- Members -------------------
-async function loadMembers(){
-try{
-// FIX: Use external loadMembers.php (DB-backed)
-const res = await fetch("loadMembers.php?groupName=<?php echo urlencode($groupName); ?>");
-const data = await res.json();
-let html="<h4>Members:</h4>";
-// loadMembers.php returns {email, status}
-if(data.length>0) data.forEach(m=> html+=`<div>${m.email} (${m.status})</div>`); else html+="<p>No members yet</p>";
-document.getElementById("membersList").innerHTML=html;
-}catch(e){ console.error("Error loading members:", e);}
+// ------------------- Members -------------------
+async function loadMembers() {
+    try {
+        const res = await fetch("loadMembers.php?groupName=<?php echo urlencode($groupName); ?>");
+        const data = await res.json();
+
+        let html = "<h4>Members:</h4>";
+        if(data.length > 0) {
+            data.forEach(m => html += `<div>${m.email}</div>`); // Only email displayed
+        } else {
+            html += "<p>No members yet</p>";
+        }
+
+        document.getElementById("membersList").innerHTML = html;
+    } catch(e) {
+        console.error("Error loading members:", e);
+        document.getElementById("membersList").innerHTML = "<p>Error loading members.</p>";
+    }
 }
 
-document.getElementById("addMemberBtn").addEventListener("click", async ()=>{
-const email=document.getElementById("memberEmailInput").value.trim();
-if(!email) return;
+// Add new member
+document.getElementById("addMemberBtn").addEventListener("click", async () => {
+    const email = document.getElementById("memberEmailInput").value.trim();
+    if(!email) return;
 
-try{
-// FIX: Use external addMember.php (DB-backed), sending JSON body
-const res = await fetch("addMember.php",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({groupName: "<?php echo $groupName; ?>", email: email})
+    try {
+        const res = await fetch("addMember.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ groupName: "<?php echo $groupName; ?>", email: email })
+        });
+
+        const data = await res.json();
+        const msgElem = document.getElementById("memberMsg");
+
+        msgElem.innerText = data.message || (data.success ? "Member added successfully." : "Error adding member.");
+        msgElem.style.color = data.success ? "green" : "red";
+
+        if(data.success) {
+            document.getElementById("memberEmailInput").value = "";
+            loadMembers(); // Refresh member list
+        }
+
+    } catch(e) {
+        console.error("Error adding member:", e);
+        const msgElem = document.getElementById("memberMsg");
+        msgElem.innerText = "Network Error adding member.";
+        msgElem.style.color = "red";
+    }
 });
 
-const data = await res.json();
-document.getElementById("memberMsg").innerText=data.message||(data.success?"Member added successfully.":"Error.");
-document.getElementById("memberMsg").style.color=data.success?"green":"red";
-
-if(data.success) {
-    document.getElementById("memberEmailInput").value="";
-    loadMembers();
-}
-
-}catch(e){ 
-    console.error("Error adding member:", e); 
-    document.getElementById("memberMsg").innerText="Network Error adding member."; 
-    document.getElementById("memberMsg").style.color="red";
-}
-});
+// Initial load
 loadMembers();
+
 
 // ------------------- Init -------------------
 $("#chat").addClass("active");
