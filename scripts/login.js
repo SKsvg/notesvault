@@ -94,6 +94,8 @@ document.addEventListener("DOMContentLoaded", function () {
             const response = await fetch('../pages/login.php', {
                 method: 'POST',
                 body: formData,
+                // Ensure the browser sends and accepts cookies (PHPSESSID)
+                credentials: 'include'
             });
             const data = await response.json();
 
