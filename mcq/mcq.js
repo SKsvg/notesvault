@@ -7,6 +7,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Quiz Logic
   let quizzes = JSON.parse(localStorage.getItem('notesvault-quizzes')) || [];
+  // expose debug handle so you can inspect state in console
+  window.__mcq = window.__mcq || {};
+  window.__mcq.quizzes = quizzes;
   // Migrate old mcqs if exist
   if (quizzes.length === 0 && localStorage.getItem('notesvault-mcqs')) {
     const oldMcqs = JSON.parse(localStorage.getItem('notesvault-mcqs'));
@@ -37,6 +40,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   function saveQuizzes() {
     localStorage.setItem('notesvault-quizzes', JSON.stringify(quizzes));
+    window.__mcq.quizzes = quizzes;
   }
   let currentQuizId = null;
   let isSortedNewest = false;
@@ -71,6 +75,7 @@ document.addEventListener('DOMContentLoaded', function() {
   document.addEventListener('click', function(e) {
     if (e.target.matches('.add-mcq-btn')) {
       currentQuizId = parseInt(e.target.dataset.quizId);
+      window.__mcq.currentQuizId = currentQuizId;
       mcqFront.style.display = 'none';
       mcqContainer.style.display = '';
       quizCreateForm.style.display = 'none';
@@ -82,6 +87,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const quiz = quizzes.find(q => q.id == quizId);
       if (!quiz || quiz.mcqs.length === 0) return;
       currentQuizId = quizId;
+      window.__mcq.currentQuizId = currentQuizId;
       mcqFront.style.display = 'none';
       mcqContainer.style.display = '';
       quizCreateForm.style.display = 'none';
@@ -90,13 +96,20 @@ document.addEventListener('DOMContentLoaded', function() {
       let score = 0;
       let quizHtml = `<h2>${quiz.name}</h2>`;
       quiz.mcqs.forEach((q, i) => {
-        quizHtml += `<div class="quiz-item">
-          <strong>Q${i+1}:</strong> ${q.question}<br>
-          <label><input type="radio" name="quiz${i}" value="A"> A: ${q.options.A}</label>
-          <label><input type="radio" name="quiz${i}" value="B"> B: ${q.options.B}</label>
-          <label><input type="radio" name="quiz${i}" value="C"> C: ${q.options.C}</label>
-          <label><input type="radio" name="quiz${i}" value="D"> D: ${q.options.D}</label>
-        </div>`;
+        if (q.type === 'short') {
+          quizHtml += `<div class="quiz-item">
+            <strong>Q${i+1} (Short Answer):</strong> ${q.question}<br>
+            <input type="text" name="quiz${i}" placeholder="Your answer">
+          </div>`;
+        } else {
+          quizHtml += `<div class="quiz-item">
+            <strong>Q${i+1} (MCQ):</strong> ${q.question}<br>
+            <label><input type="radio" name="quiz${i}" value="A"> A: ${q.options.A}</label>
+            <label><input type="radio" name="quiz${i}" value="B"> B: ${q.options.B}</label>
+            <label><input type="radio" name="quiz${i}" value="C"> C: ${q.options.C}</label>
+            <label><input type="radio" name="quiz${i}" value="D"> D: ${q.options.D}</label>
+          </div>`;
+        }
       });
       quizHtml += '<div class="quiz-submit-row"><button id="submitQuizBtn" class="quiz-btn">Submit Quiz</button><button id="resetQuizBtn" class="quiz-btn">Reset</button></div>';
       mcqList.innerHTML = quizHtml;
@@ -106,8 +119,13 @@ document.addEventListener('DOMContentLoaded', function() {
         submitBtn.addEventListener('click', function() {
           score = 0;
           quiz.mcqs.forEach((q, i) => {
-            const selected = document.querySelector(`input[name='quiz${i}']:checked`);
-            if (selected && selected.value === q.correct) score++;
+            if (q.type === 'short') {
+              const input = document.querySelector(`input[name='quiz${i}']`);
+              if (input && input.value.trim().toLowerCase() === q.options.A.toLowerCase()) score++;
+            } else {
+              const selected = document.querySelector(`input[name='quiz${i}']:checked`);
+              if (selected && selected.value === q.correct) score++;
+            }
           });
           quiz.score = score;
           saveQuizzes();
@@ -116,6 +134,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       if (resetBtn) {
         resetBtn.addEventListener('click', function() {
+          document.querySelectorAll('input[type="radio"], input[type="text"]').forEach(input => input.value = '');
           document.querySelectorAll('input[type="radio"]').forEach(radio => radio.checked = false);
         });
       }
@@ -159,16 +178,27 @@ document.addEventListener('DOMContentLoaded', function() {
     const list = document.getElementById('mcqList');
     if (!list) return;
     if (quiz.mcqs.length === 0) {
-      list.innerHTML = '<p>No MCQs yet. Add your first!</p>';
+      list.innerHTML = '<p>No questions yet. Add your first!</p>';
       return;
     }
-    list.innerHTML = quiz.mcqs.map((q, i) => `
-      <div class="mcq-item">
-        <strong>Q${i+1}:</strong> ${q.question}<br>
-        <span>A: ${q.options.A}</span> | <span>B: ${q.options.B}</span> | <span>C: ${q.options.C}</span> | <span>D: ${q.options.D}</span>
-        <span class="correct">Correct: ${q.correct}</span>
-      </div>
-    `).join('');
+    list.innerHTML = quiz.mcqs.map((q, i) => {
+      if (q.type === 'short') {
+        return `
+          <div class="mcq-item">
+            <strong>Q${i+1} (Short Answer):</strong> ${q.question}<br>
+            <span>Answer: ${q.options.A}</span>
+          </div>
+        `;
+      } else {
+        return `
+          <div class="mcq-item">
+            <strong>Q${i+1} (MCQ):</strong> ${q.question}<br>
+            <span>A: ${q.options.A}</span> | <span>B: ${q.options.B}</span> | <span>C: ${q.options.C}</span> | <span>D: ${q.options.D}</span>
+            <span class="correct">Correct: ${q.correct}</span>
+          </div>
+        `;
+      }
+    }).join('');
   }
 
   quizCreateForm.addEventListener('submit', function(e) {
@@ -176,32 +206,109 @@ document.addEventListener('DOMContentLoaded', function() {
     const name = document.getElementById('quizName').value.trim();
     const description = document.getElementById('quizDescription').value;
     if (!name) return;
-    quizzes.push({id: Date.now(), name, description, mcqs: []});
+    const newId = Date.now();
+    quizzes.push({id: newId, name, description, mcqs: []});
     saveQuizzes();
+    window.__mcq.currentQuizId = newId;
     this.reset();
+    // open add-question view for newly created quiz
+    currentQuizId = newId;
+    mcqFront.style.display = 'none';
+    mcqContainer.style.display = '';
     quizCreateForm.style.display = 'none';
-    mcqFront.style.display = '';
+    mcqForm.style.display = '';
+    if (mcqList) mcqList.style.display = '';
+    renderMCQsForQuiz(currentQuizId);
     renderQuizCards(isSortedNewest);
   });
 
+  // Toggle sections based on question type
+  document.querySelectorAll('input[name="questionType"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+      const textboxSection = document.getElementById('textboxSection');
+      const mcqInputSection = document.getElementById('mcqInputSection');
+      const shortIds = ['questionInputShort', 'answer'];
+      const mcqIds = ['questionInputMcq', 'optionA', 'optionB', 'optionC', 'optionD', 'correctOption'];
+      if (this.value === 'short') {
+        textboxSection.style.display = '';
+        mcqInputSection.style.display = 'none';
+        // enable short inputs
+        shortIds.forEach(id => {
+          const el = document.getElementById(id);
+          if (el) { el.disabled = false; el.required = true; }
+        });
+        // disable mcq inputs so hidden required won't block form validation
+        mcqIds.forEach(id => {
+          const el = document.getElementById(id);
+          if (el) { el.disabled = true; el.required = false; }
+        });
+      } else {
+        textboxSection.style.display = 'none';
+        mcqInputSection.style.display = '';
+        // disable short inputs
+        shortIds.forEach(id => {
+          const el = document.getElementById(id);
+          if (el) { el.disabled = true; el.required = false; }
+        });
+        // enable mcq inputs
+        mcqIds.forEach(id => {
+          const el = document.getElementById(id);
+          if (el) { el.disabled = false; el.required = true; }
+        });
+      }
+    });
+  });
+
+  // Initialize input disabled states according to default radio
+  (function initQuestionType() {
+    const selected = document.querySelector('input[name="questionType"]:checked');
+    if (selected) selected.dispatchEvent(new Event('change'));
+  })();
+
   mcqForm.addEventListener('submit', function(e) {
     e.preventDefault();
-    if (!currentQuizId) return;
-    const question = document.getElementById('questionInput').value.trim();
-    const options = {
-      A: document.getElementById('optionA').value.trim(),
-      B: document.getElementById('optionB').value.trim(),
-      C: document.getElementById('optionC').value.trim(),
-      D: document.getElementById('optionD').value.trim()
-    };
-    const correct = document.getElementById('correctOption').value;
-    if (!question || !options.A || !options.B || !options.C || !options.D || !correct) return;
+    // If no quiz is selected (user didn't click Add MCQ), default to the latest quiz
+    if (!currentQuizId) {
+      if (quizzes && quizzes.length > 0) {
+        currentQuizId = quizzes[quizzes.length - 1].id;
+        console.log('[MCQ] No quiz selected — defaulting to most recent quiz id', currentQuizId);
+        try { alert('No quiz selected — adding to the most recent quiz.'); } catch (e) {}
+      } else {
+        console.warn('[MCQ] No quizzes exist to add to');
+        return;
+      }
+    }
+    const type = document.querySelector('input[name="questionType"]:checked').value;
+    let question, options, correct;
+    if (type === 'short') {
+      question = document.getElementById('questionInputShort').value.trim();
+      const answer = document.getElementById('answer').value.trim();
+      if (!question || !answer) return;
+      options = { A: answer, B: '', C: '', D: '' };
+      correct = 'A';
+    } else {
+      question = document.getElementById('questionInputMcq').value.trim();
+      options = {
+        A: document.getElementById('optionA').value.trim(),
+        B: document.getElementById('optionB').value.trim(),
+        C: document.getElementById('optionC').value.trim(),
+        D: document.getElementById('optionD').value.trim()
+      };
+      correct = document.getElementById('correctOption').value;
+      if (!question || !options.A || !options.B || !options.C || !options.D || !correct) return;
+    }
     const quiz = quizzes.find(q => q.id == currentQuizId);
     if (quiz) {
-      quiz.mcqs.push({ question, options, correct });
+      quiz.mcqs.push({ type, question, options, correct });
       saveQuizzes();
+      window.__mcq.quizzes = quizzes;
+      console.log('[MCQ] added question to quiz', currentQuizId, quiz.mcqs[quiz.mcqs.length-1]);
     }
     this.reset();
+    // Reset to short answer
+    document.querySelector('input[name="questionType"][value="short"]').checked = true;
+    document.getElementById('textboxSection').style.display = '';
+    document.getElementById('mcqInputSection').style.display = 'none';
     renderMCQsForQuiz(currentQuizId);
     renderQuizCards(isSortedNewest);
   });
@@ -225,7 +332,7 @@ document.addEventListener('DOMContentLoaded', function() {
     weeklyQuizBtn.addEventListener('click', function() {
       const allMcqs = quizzes.flatMap(q => q.mcqs);
       if (allMcqs.length === 0) return;
-      const quizSection = document.getElementById('quizSection');
+      const weeklyQuizSection = document.getElementById('weeklyQuizSection');
       let score = 0;
       let quizHtml = '<h2>All Quizzes Combined</h2>';
       allMcqs.forEach((q, i) => {
@@ -238,14 +345,14 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>`;
       });
       quizHtml += '<button id="submitQuiz">Submit Quiz</button>';
-      quizSection.innerHTML = quizHtml;
+      weeklyQuizSection.innerHTML = quizHtml;
       document.getElementById('submitQuiz').onclick = function() {
         score = 0;
         allMcqs.forEach((q, i) => {
           const selected = document.querySelector(`input[name='quiz${i}']:checked`);
           if (selected && selected.value === q.correct) score++;
         });
-        quizSection.innerHTML += `<p>Your Score: ${score} / ${allMcqs.length}</p>`;
+        weeklyQuizSection.innerHTML += `<p>Your Score: ${score} / ${allMcqs.length}</p>`;
       };
     });
   }
