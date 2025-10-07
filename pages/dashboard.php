@@ -7,6 +7,36 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 // If they are logged in, the rest of the dashboard page will be displayed below
+$conn = new mysqli('localhost', 'root', '', 'notesvault');
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// Fetch user details
+// The login handler sets the session key 'user_email' (see pages/login.php).
+// Use that key here so the dashboard can find the logged-in user.
+$email = $_SESSION['user_email'] ?? null;
+// If email isn't available in the session, consider the session invalid and send to login
+if ($email === null) {
+    header("Location: login.html");
+    exit();
+}
+
+$stmt = $conn->prepare("SELECT name, email FROM users WHERE email = ?");
+$stmt->bind_param("s", $email);
+$stmt->execute();
+$result = $stmt->get_result();
+$user = $result ? $result->fetch_assoc() : null;
+
+// If the user record wasn't found in the database, provide safe defaults to avoid
+// 'Trying to access array offset on value of type null' warnings when rendering.
+if (!$user) {
+    $user = [
+        'name' => 'Unknown User',
+        'email' => $email,
+    ];
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -30,8 +60,8 @@ if (!isset($_SESSION['user_id'])) {
             <div class="profile-header">
                 <div class="avatar"><i class="fas fa-user-graduate"></i></div>
                 <div class="profile-info">
-                    <h2>Student <div id="studentnumber"></div></h2>
-                    <p class="email">univ.jfn.ac.lk</p>
+                    <h2><?php echo htmlspecialchars($user['name']); ?> <div id="studentnumber"></div></h2>
+                    <p class="email"><?php echo htmlspecialchars($user['email']); ?></p>
                     <p class="institution">University of Jaffna</p>
                 </div>
             </div>
