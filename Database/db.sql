@@ -127,3 +127,15 @@ CREATE TABLE quiz_responses (
   FOREIGN KEY (quiz_id) REFERENCES group_quizzes(id),
   FOREIGN KEY (user_id) REFERENCES users(id)
 );
+
+CREATE TABLE `edit_users` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `phone` varchar(20) DEFAULT NULL,
+  `institution` varchar(255) DEFAULT NULL,
+  `branch` varchar(255) DEFAULT NULL,
+  `year` varchar(50) DEFAULT NULL,
+  `student_id` varchar(50) DEFAULT NULL,
+  `profile_pic` varchar(255) DEFAULT NULL,
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
