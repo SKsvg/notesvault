@@ -166,7 +166,8 @@
             } else if (query === 'notes') {
               window.location.href = 'notes.php';
             } else {
-      });
+            }}
+          })});
 
       // Fetch example data from the API and log it
       fetch('http://localhost/notesvault/backend/api/')
