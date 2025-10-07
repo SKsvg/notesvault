@@ -55,7 +55,7 @@ $conn->close();
     <main style="padding-top: 4rem;">
       <div class="trash-bin-title-box">
         <h1 class="page-title">Trash Bin</h1>
-        <p id="note">Manage your deleted notes here. You can restore or permanently delete them.</p></div>
+        <p id="note" style= "font-size: 1.2rem; color: white;">Manage your deleted notes here. You can restore or permanently delete them.</p></div>
       <div id="binNotesContainer" class="notes-grid"></div>
 
     <script>
