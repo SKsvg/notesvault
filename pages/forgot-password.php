@@ -35,10 +35,10 @@
       <p>Enter your email and we’ll send you reset instructions</p>
     </div>
 
-    <form id="forgotPasswordForm" class="login-form">
+    <form id="forgotPasswordForm" class="login-form" method="post" action="../php-password-reset/send-password-reset.php">
       <div class="form-group floating-input">
-        <input type="email" id="reset-email" name="reset-email" required placeholder=" " autocomplete="email" />
-        <label for="reset-email">Email address</label>
+        <input type="email" id="email" name="email" required placeholder=" " autocomplete="email" />
+        <label for="email">Email address</label>
         <div class="input-border"></div>
       </div>
 
