@@ -94,30 +94,46 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // Profile Form Submission (Existing)
-    if (editForm) {
-        editForm.addEventListener("submit", (e) => {
-            e.preventDefault();
-            const name = document.getElementById("name").value.trim();
-            const email = document.getElementById("email").value.trim();
-            const phone = document.getElementById("phone").value.trim();
-            const institution = document.getElementById("institution").value.trim();
-            const branch = document.getElementById("branch").value.trim();
-            const year = document.getElementById("year").value.trim();
-            const studentID = document.getElementById("studentID").value.trim();
+    // Profile Form Submission
+if (editForm) {
+    editForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
 
-            if (profileNameEl) profileNameEl.textContent = name;
-            if (profileEmailEl) profileEmailEl.textContent = email;
-            if (profilePhoneEl) profilePhoneEl.textContent = phone;
-            if (profileInstitutionEl) profileInstitutionEl.textContent = institution;
-            if (profileBranchEl) profileBranchEl.textContent = branch;
-            if (profileYearEl) profileYearEl.textContent = year;
-            if (profileStudentIDEl) profileStudentIDEl.textContent = studentID;
+        const formData = new FormData(editForm);
 
-            alert("Profile updated successfully!");
-            closeEditModal();
-        });
-    }
+        try {
+            const res = await fetch('save_profile.php', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await res.json();
+
+            if (result.success) {
+                const data = result.data;
+
+                // Update dashboard immediately
+                if (profileNameEl) profileNameEl.textContent = data.name;
+                if (profilePhoneEl) profilePhoneEl.textContent = data.phone;
+                if (profileInstitutionEl) profileInstitutionEl.textContent = data.institution;
+                if (profileBranchEl) profileBranchEl.textContent = data.branch;
+                if (profileYearEl) profileYearEl.textContent = data.year;
+                if (profileStudentIDEl) profileStudentIDEl.textContent = data.studentID;
+                if (data.profilePic && profileAvatarWrapper) {
+                    profileAvatarWrapper.innerHTML = `<img src="${data.profilePic}" alt="Profile Avatar" style="width:100%; height:100%; object-fit:cover;">`;
+                }
+
+                alert("Profile updated successfully!");
+                closeEditModal();
+            } else {
+                alert("Failed to update profile: " + result.message);
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Error saving profile. Try again.");
+        }
+    });
+}
+
 
     // ------------------------------------------------------------------
     // --- CALENDAR & EVENT MANAGEMENT LOGIC ---
