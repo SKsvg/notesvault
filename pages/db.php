@@ -1,9 +1,9 @@
 <?php
 // Define database credentials
-$host = 'localhost'; // Replace with your MySQL host and port if needed
-$dbname = 'notesvault';
+$host = 'localhost:3307'; // Replace with your MySQL host and port if needed
+$dbname = 'test3';
 $username = 'root'; // Replace with your MySQL username
-$password = ''; // Replace with your MySQL password
+$password = 'insathMYSQL#123'; // Replace with your MySQL password
 
 try {
     // Create a new PDO instance

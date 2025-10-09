@@ -63,9 +63,7 @@
           </button>
 
           <div id="profileContainer" class="profile-container hidden">
-            <button class="profile-btn" aria-label="User profile and settings">
-              <i class="fas fa-user-circle"></i>
-            </button>
+            <button class="profile-btn" aria-label="User profile and settings"> <img src="<?php echo htmlspecialchars($user['profile_pic']); ?>" alt="Profile Picture" class="profile-header-img" /> </button>
             <div class="profile-dropdown">
               <a href="dashboard.php" class="dropdown-item">Dashboard</a>
               <a href="../pages/logout.php" class="dropdown-item logoutBtn" id="logoutBtn">

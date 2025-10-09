@@ -1,12 +1,16 @@
 <?php
+// THIS IS THE LINE YOU NEED TO ADD AT THE VERY TOP
+require_once '../pages/session_check.php'; // Make sure this path is correct!
+?>
+
+<?php
 // Start a new session
-session_start();
 
 // Database connection details
-$servername = "localhost";
+$servername = "localhost:3307";
 $username = "root";
-$password = "";
-$dbname = "notesvault";
+$password = "insathMYSQL#123";
+$dbname = "test3";
 
 // Create connection
 $conn = new mysqli($servername, $username, $password, $dbname);

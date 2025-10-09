@@ -1,5 +1,8 @@
 <!-- Overview (HTML) -->
-
+<?php
+// THIS IS THE LINE YOU NEED TO ADD AT THE VERY TOP
+require_once '../pages/session_check.php'; // Make sure this path is correct!
+?>
 <!DOCTYPE html>
 <html lang="en">
   <head>

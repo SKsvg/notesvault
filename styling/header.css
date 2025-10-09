@@ -528,3 +528,47 @@
 [data-theme='dark'] {
   --danger-400: #e85664;
 }
+
+/* 1. Style the button to define the size and shape of the avatar container */
+.profile-btn {
+    /* Override any default button styling */
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    
+    /* Define the avatar size (adjust as needed) */
+    width: 32px; 
+    height: 32px;
+    
+    /* Make the container circular and hide anything that spills over */
+    border-radius: 50%;
+    overflow: hidden;
+    
+    /* Ensure it aligns correctly within the header's navbar-actions */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    /* Optional: Add a light border or shadow to make it pop */
+    border: 1px solid var(--border-color, #ccc); 
+}
+
+/* 2. Style the image itself to fill the button container and maintain aspect ratio */
+.profile-header-img {
+    width: 100%;
+    height: 100%;
+    
+    /* Ensures the image covers the entire 32x32 area without being stretched */
+    object-fit: cover; 
+    
+    /* Inherits the circular shape from the parent button */
+    border-radius: 50%; 
+}
+
+/* 3. Ensure the dropdown container is correctly aligned */
+/* If the dropdown jumps, you may need to ensure its parent, profile-container, is positioned correctly */
+.profile-container {
+    position: relative; /* Essential for positioning the absolute dropdown */
+    margin-left: 10px; /* Spacing from the theme toggle or previous element */
+}

@@ -1,29 +1,54 @@
 <?php
 session_start();
-if (!isset($_SESSION['user_email'])) {
-    http_response_code(401);
-    echo json_encode(["success" => false, "message" => "Not logged in"]);
+
+if (!isset($_SESSION['user_id'])) {
+    // Redirect them to the login page
+    header("Location: login.html");
+    exit();
+}
+// If they are logged in, the rest of the dashboard page will be displayed below
+$conn = new mysqli('localhost:3307', 'root', 'insathMYSQ#123', 'test3');
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// Fetch user details
+// The login handler sets the session key 'user_email' (see pages/login.php).
+// Use that key here so the dashboard can find the logged-in user.
+$email = $_SESSION['user_email'] ?? null;
+// If email isn't available in the session, consider the session invalid and send to login
+if ($email === null) {
+    header("Location: login.html");
     exit();
 }
 
-$conn = new mysqli('localhost:3307', 'root', 'insathMYSQL#123', 'test3');
-if ($conn->connect_error) {
-    die(json_encode(["success" => false, "message" => "DB connection failed"]));
-}
-
-$email = $_SESSION['user_email'];
-
-// Fetch current user data for display
-$stmt = $conn->prepare("SELECT u.id, u.name, u.email, e.phone, e.institution, e.branch, e.year, e.student_id, e.profile_pic
-                        FROM users u
-                        LEFT JOIN edit_users e ON u.id = e.user_id
-                        WHERE u.email=?");
+// *** MODIFIED SQL QUERY TO FETCH ALL FIELDS FOR DISPLAY AND EDITING ***
+$stmt = $conn->prepare("SELECT name, email, phone, institution, branch, year, student_id, profile_pic_path FROM users WHERE email = ?");
 $stmt->bind_param("s", $email);
 $stmt->execute();
 $result = $stmt->get_result();
-$user = $result->fetch_assoc();
-$stmt->close();
-$conn->close();
+$user = $result ? $result->fetch_assoc() : null;
+
+// If the user record wasn't found in the database, provide safe defaults to avoid
+// 'Trying to access array offset on value of type null' warnings when rendering.
+if (!$user) {
+    $user = [
+        'name' => 'Unknown User',
+        'email' => $email,
+        'phone' => '', // Default empty
+        'institution' => '-', // Default as per static HTML
+        'branch' => '-',       // Default as per static HTML
+        'year' => '-',                 // Default as per static HTML
+        'student_id' => '',                 // Default empty
+        'profile_pic_path' => '../assets/index/images/default-avatar.png',
+    ];
+} else {
+    // Set a default profile path if not set in DB
+    if (empty($user['profile_pic_path'])) {
+        $user['profile_pic_path'] = '../assets/index/images/default-avatar.png';
+    }
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -38,36 +63,27 @@ $conn->close();
     <link rel="stylesheet" href="../styling/dashboard.css" />
 </head>
 <body>
-<?php include '../components/header.php'; ?>
+    
+  <?php include '../components/header.php'; ?>
 
 <main class="dashboard-container">
     <div class="dashboard-grid">
-        <!-- Profile Card -->
         <section class="profile-card" style="height: 630px;">
             <div class="profile-header">
-                <div class="avatar">
-                    <?php if(!empty($user['profile_pic'])): ?>
-                        <img src="<?php echo htmlspecialchars($user['profile_pic']); ?>" alt="Profile Avatar">
-                    <?php else: ?>
-                        <i class="fas fa-user-graduate"></i>
-                    <?php endif; ?>
-                </div>
-
+               <div class="avatar"><img src="<?php echo htmlspecialchars($user['profile_pic_path']); ?>" alt="Profile Avatar"></div>
                 <div class="profile-info">
-                    <h2><?php echo htmlspecialchars($user['name']); ?> <div id="studentnumber"><?php echo htmlspecialchars($user['student_id']); ?></div></h2>
+                    <h2><?php echo htmlspecialchars($user['name']); ?> <div id="studentnumber"></div></h2>
                     <p class="email"><?php echo htmlspecialchars($user['email']); ?></p>
-                    <p class="institution"><?php echo htmlspecialchars($user['institution'] ?: 'University of Jaffna'); ?></p>
+                    <p class="institution">University</p>
                 </div>
             </div>
             <div class="profile-details">
-                <div class="detail-item"><i class="fas fa-graduation-cap"></i><div><span>Department</span><p><?php echo htmlspecialchars($user['branch'] ?: 'Computer Science'); ?></p></div></div>
-                <div class="detail-item"><i class="fas fa-calendar-alt"></i><div><span>Year</span><p><?php echo htmlspecialchars($user['year'] ?: '2nd Year'); ?></p></div></div>
+                <div class="detail-item"><i class="fas fa-graduation-cap"></i><div><span>Departmet</span><p><?php echo htmlspecialchars($user['branch']); ?></p></div></div>
+                <div class="detail-item"><i class="fas fa-calendar-alt"></i><div><span>Year</span><p><?php echo htmlspecialchars($user['year']); ?></p></div></div>
                 <div class="detail-item"><i class="fas fa-id-card"></i><div><span>Student ID</span><p><?php echo htmlspecialchars($user['student_id']); ?></p></div></div>
             </div>
             <button class="edit-profile-btn"><i class="fas fa-edit"></i> Edit Profile</button>
         </section>
-
-        <!-- Edit Modal -->
         <div class="modal" id="editModal" aria-hidden="true">
             <div class="profile-modal" role="dialog" aria-modal="true" aria-labelledby="editProfileTitle">
                 <div class="modal-header">
@@ -75,47 +91,50 @@ $conn->close();
                     <button id="closeModal" class="close" aria-label="Close">&times;</button>
                 </div>
                 <div class="modal-body">
-                    <form id="editForm" class="profile-form" enctype="multipart/form-data" novalidate>
+                <form id="editForm" class="profile-form" novalidate method="POST" action="save_profile.php" enctype="multipart/form-data">
+                           <input type="hidden" name="user_email" value="<?php echo htmlspecialchars($user['email']); ?>" />
+                        
                         <div class="avatar-upload">
                             <label class="avatar-label" for="profilePic">
-                                <img src="<?php echo htmlspecialchars($user['profile_pic'] ?: '../assets/index/images/default-avatar.png'); ?>" alt="Avatar preview" id="avatarPreview" class="avatar-img" />
+                                <img src="<?php echo htmlspecialchars($user['profile_pic_path']); ?>" alt="Avatar preview" id="avatarPreview" class="avatar-img" />
                                 <span class="change-avatar-text"><i class="fas fa-camera"></i> Change profile</span>
                             </label>
-                            <input type="file" id="profilePic" name="profilePic" accept="image/*" />
+                            <input type="file" id="profilePic" name="profile_pic" accept="image/*" />
                         </div>
+                        
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="name">Full Name</label>
-                                <input type="text" id="name" name="name" value="<?php echo htmlspecialchars($user['name']); ?>" />
+                                <input type="text" id="name" name="name" value="<?php echo htmlspecialchars($user['name']); ?>" placeholder="Enter your name" />
                             </div>
                             <div class="form-group">
                                 <label for="email">Email</label>
-                                <input type="email" id="email" name="email" value="<?php echo htmlspecialchars($user['email']); ?>" disabled />
+                                <input type="email" id="email" name="email_display" disabled value="<?php echo htmlspecialchars($user['email']); ?>" placeholder="Enter your email" />
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="phone">Phone</label>
-                                <input type="text" id="phone" name="phone" value="<?php echo htmlspecialchars($user['phone']); ?>" />
+                                <input type="text" id="phone" name="phone" value="<?php echo htmlspecialchars($user['phone']); ?>" placeholder="Enter phone number" />
                             </div>
                             <div class="form-group">
                                 <label for="institution">Institution</label>
-                                <input type="text" id="institution" name="institution" value="<?php echo htmlspecialchars($user['institution']); ?>" />
+                                <input type="text" id="institution" name="institution" value="<?php echo htmlspecialchars($user['institution']); ?>" placeholder="University/College" />
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="branch">Branch</label>
-                                <input type="text" id="branch" name="branch" value="<?php echo htmlspecialchars($user['branch']); ?>" />
+                                <input type="text" id="branch" name="branch" value="<?php echo htmlspecialchars($user['branch']); ?>" placeholder="Your Branch" />
                             </div>
                             <div class="form-group">
                                 <label for="year">Year</label>
-                                <input type="text" id="year" name="year" value="<?php echo htmlspecialchars($user['year']); ?>" />
+                                <input type="text" id="year" name="year" value="<?php echo htmlspecialchars($user['year']); ?>" placeholder="e.g., 2nd Year" />
                             </div>
                         </div>
                         <div class="form-group">
-                            <label for="studentID">Student ID</label>
-                            <input type="text" id="studentID" name="studentID" value="<?php echo htmlspecialchars($user['student_id']); ?>" />
+                            <label for="student_ID">Student ID</label>
+                            <input type="text" id="student_ID" name="student_id" value="<?php echo htmlspecialchars($user['student_id']); ?>" placeholder="Enter Student ID" />
                         </div>
                         <div class="form-actions">
                             <button type="button" id="cancelBtn" class="cancel-btn">Cancel</button>

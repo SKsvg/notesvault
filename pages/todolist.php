@@ -1,4 +1,29 @@
 <!-- To-Do List Page (PHP/HTML) -->
+<?php
+// THIS IS THE LINE YOU NEED TO ADD AT THE VERY TOP
+require_once '../pages/session_check.php'; // Make sure this path is correct!
+?>
+<?php
+// Check if a message is set in the session from a previous upload
+if (isset($_SESSION['message'])) {
+    $message = $_SESSION['message'];
+    $type = $_SESSION['message_type'];
+
+    // Use JavaScript to display a pop-up alert with the message
+    echo "<script>";
+    if ($type === "success") {
+        echo "alert('Success: " . addslashes($message) . "');";
+    } else {
+        echo "alert('Error: " . addslashes($message) . "');";
+    }
+    echo "</script>";
+
+    // Clear the session variables after displaying the alert
+    // This prevents the message from showing up again on page refresh
+    unset($_SESSION['message']);
+    unset($_SESSION['message_type']);
+}
+?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -39,7 +64,7 @@
 
   <body>
     <!-- Header -->
-    <div id="header-placeholder"></div>
+    <?php include '../components/header.php'; ?>
 
     <!-- Main Content -->
     <main id="main-content">
@@ -124,10 +149,11 @@
     </main>
 
     <!-- Footer -->
-    <div id="footer-placeholder"></div>
+    <?php include '../components/footer.php'; ?>
 
     <!-- JavaScript -->
     <script src="../scripts/script.js" defer></script>
+    <script src="../scripts/header.js" defer></script>
     <script src="../scripts/todolist.js" defer></script>
   </body>
 </html>

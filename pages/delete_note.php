@@ -3,10 +3,10 @@
 session_start();
 
 // Database connection details
-$servername = "localhost";
+$servername = "localhost:3307";
 $username = "root";
-$password = "";
-$dbname = "notesvault";
+$password = "insathMYSQL#123";
+$dbname = "test3";
 
 // Create connection
 $conn = new mysqli($servername, $username, $password, $dbname);

@@ -1,10 +1,15 @@
 <!-- MCQ Page (HTML) -->
+ <?php
+// THIS IS THE LINE YOU NEED TO ADD AT THE VERY TOP
+require_once '../pages/session_check.php'; // Make sure this path is correct!
+?>
+
 <?php
   // Database connection configuration
-  $host = 'localhost';
-  $dbname = 'notesvault'; // Change if your database name is different
+  $host = 'localhost:3307';
+  $dbname = 'test3'; // Change if your database name is different
   $username = 'root'; // Default XAMPP MySQL user
-  $password = ''; // Default XAMPP MySQL password (empty)
+  $password = 'insathMYSQL#123'; // Default XAMPP MySQL password (empty)
 
   try {
       $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);

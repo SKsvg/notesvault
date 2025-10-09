@@ -35,10 +35,14 @@
 
 .profile-header {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: center;      /* centers horizontally */
+  justify-content: center;  /* optional: centers vertically if container has height */
+  text-align: center;       /* centers text content */
   margin-bottom: 1.75rem;
 }
 
+/* Avatar */
 .avatar {
   width: 4.5rem;
   height: 4.5rem;
@@ -47,18 +51,20 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 1.25rem;
+  margin-bottom: 1rem;   /* space below avatar instead of margin-right */
   color: white;
   font-size: 1.75rem;
   flex-shrink: 0;
 }
 
+/* Profile name */
 .profile-info h2 {
   margin-bottom: 0.25rem;
   font-size: 1.375rem;
   color: var(--text-primary);
 }
 
+/* Email */
 .email {
   font-size: 0.875rem;
   color: var(--text-secondary);
@@ -66,6 +72,7 @@
   display: block;
 }
 
+/* Institution */
 .institution {
   font-size: 0.875rem;
   color: var(--primary-500);
@@ -74,7 +81,7 @@
 }
 
 .profile-details {
-  margin: 2rem 0;
+  margin: 0 0;
 }
 
 .detail-item {

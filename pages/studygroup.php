@@ -1,5 +1,9 @@
 <?php
-session_start();
+// THIS IS THE LINE YOU NEED TO ADD AT THE VERY TOP
+require_once '../pages/session_check.php'; // Make sure this path is correct!
+?>
+
+<?php
 
 if (!isset($_SESSION['user_id'])) {
     // Redirect them to the login page

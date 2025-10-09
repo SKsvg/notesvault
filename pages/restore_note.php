@@ -3,9 +3,9 @@
 session_start();
 
 // Database connection details
-$servername = "localhost";
+$servername = "localhost:3307";
 $username = "root";
-$password = "";
+$password = "insathMYSQL#123";
 $dbname = "notesvault";
 
 // Create connection
