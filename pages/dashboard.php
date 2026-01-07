@@ -6,7 +6,7 @@ if (!isset($_SESSION['user_email'])) {
     exit();
 }
 
-$conn = new mysqli('localhost:3307', 'root', 'insathMYSQL#123', 'test3');
+$conn = new mysqli('localhost:3306', 'root', '', 'notesvault');
 if ($conn->connect_error) {
     die(json_encode(["success" => false, "message" => "DB connection failed"]));
 }
