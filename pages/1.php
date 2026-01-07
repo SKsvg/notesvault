@@ -8,7 +8,7 @@ if (!isset($_SESSION['user_id']) || !isset($_POST['user_email'])) {
 }
 
 // 2. Database Connection
-$conn = new mysqli('localhost:3307', 'root', 'insathMYSQ#123', 'test3');
+$conn = new mysqli('localhost:3306', 'root', '', '');
 if ($conn->connect_error) {
     error_log("DB Connection failed in save_profile.php: " . $conn->connect_error);
     header("Location: dashboard.php?status=db_error");
